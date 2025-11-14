@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0">
+    <teiHeader xml:lang="eng">
+        <fileDesc>
+            <titleStmt>
+                <title xml:lang="grc">Εὐθύφρων</title>
+                <author>Plato</author>
+            </titleStmt>
+        </fileDesc>
+        <profileDesc>
+            <particDesc>
+                <person><persName>Εὐθύφρων</persName></person>
+                <person><persName>Σωκράτης</persName></person>
+            </particDesc>
+        </profileDesc>
+    </teiHeader>
+    <text xml:lang="grc">
+        <body>
+            <div xml:lang="grc" n="urn:cts:greekLit:tlg0059.tlg001.perseus-grc1" type="edition">
+                <head>Εὐθύφρων</head>
+                <div resp="perseus" n="2" subtype="section" type="textpart">
+                    <p><said who="#Εὐθύφρων">
+                        <milestone n="2" unit="page" resp="Stephanus"/>
+                        <milestone n="2a" unit="section" resp="Stephanus"/>
+                        <label>ΕΥΘ.</label>
+                        τί νεώτερον, ὦ Σώκρατες, γέγονεν;
+                    </said></p>
+                    <p><said who="#Σωκράτης">
+                        <label>ΣΩ.</label>
+                        οὔτοι δὴ Ἀθηναῖοί γε, ὦ Εὐθύφρων, δίκην αὐτὴν καλοῦσιν ἀλλὰ γραφήν.
+                    </said></p>
+                </div>
+            </div>
+        </body>
+    </text>
+</TEI>

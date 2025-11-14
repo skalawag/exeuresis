@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["pi_grapheion"]
+
+[project]
+name = "pi-grapheion"
+version = "0.1.0"
+description = "Extract and reformat Greek texts from TEI XML files"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    {name = "Mark Scala"}
+]
+dependencies = [
+    "lxml>=5.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+pi-grapheion = "pi_grapheion.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --cov=pi_grapheion --cov-report=term-missing"
+
+[tool.black]
+line-length = 88
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+select = ["E", "F", "I", "N", "W"]

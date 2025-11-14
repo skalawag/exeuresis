@@ -1,0 +1,250 @@
+"""Command-line interface for Perseus text extractor."""
+
+import argparse
+import sys
+from pathlib import Path
+
+from src.parser import TEIParser
+from src.extractor import TextExtractor
+from src.formatter import TextFormatter, OutputStyle
+from src.catalog import PerseusCatalog
+
+
+def handle_list_authors(args):
+    """Handle the list-authors command."""
+    catalog = PerseusCatalog()
+    authors = catalog.list_authors()
+
+    if not authors:
+        print("No authors found in catalog.", file=sys.stderr)
+        return
+
+    print(f"Found {len(authors)} authors:\n")
+    for author in authors:
+        print(author)
+
+
+def handle_list_works(args):
+    """Handle the list-works command."""
+    catalog = PerseusCatalog()
+
+    # Get author info
+    author = catalog.get_author_info(args.author_id)
+    if not author:
+        print(f"Author not found: {args.author_id}", file=sys.stderr)
+        print("Use 'list-authors' to see available authors.", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"{author}\n")
+
+    # Get works
+    works = catalog.list_works(args.author_id)
+    if not works:
+        print(f"No works found for {args.author_id}", file=sys.stderr)
+        return
+
+    print(f"Found {len(works)} works:\n")
+    for work in works:
+        print(work)
+
+
+def handle_search(args):
+    """Handle the search command."""
+    catalog = PerseusCatalog()
+    results = catalog.search_works(args.query)
+
+    if not results:
+        print(f"No results found for '{args.query}'", file=sys.stderr)
+        return
+
+    print(f"Found {len(results)} matches for '{args.query}':\n")
+
+    current_author = None
+    for author, work in results:
+        # Print author header if we're on a new author
+        if current_author is None or current_author.tlg_id != author.tlg_id:
+            print(f"\n{author}")
+            current_author = author
+        print(work)
+
+
+def handle_extract(args):
+    """Handle the extract command (original functionality)."""
+    """Main entry point for the CLI."""
+    parser = argparse.ArgumentParser(
+        description="Extract and reformat Greek texts from TEI XML files",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Style Options:
+  A, full_modern                Full modern edition with all punctuation, speaker labels,
+                                and Stephanus pagination markers (default)
+  B, minimal_punctuation        Minimal punctuation (periods and question marks only)
+  C, no_punctuation             No punctuation but preserves speaker labels and spacing
+  D, no_punctuation_no_labels   No punctuation, no speaker labels, continuous text
+  E, scriptio_continua          Ancient Greek continuous text: uppercase, no spaces,
+                                no punctuation, no apparatus
+  S, stephanus_layout           Approximates 1578 Stephanus edition: 40-char columns
+                                with section markers in left margin
+
+Examples:
+  %(prog)s input.xml
+  %(prog)s input.xml --style D
+  %(prog)s input.xml --style S --output stephanus.txt
+        """,
+    )
+
+    parser.add_argument(
+        "input_file",
+        type=Path,
+        help="Path to the TEI XML file to process",
+    )
+
+    parser.add_argument(
+        "-s",
+        "--style",
+        type=str,
+        default="A",
+        choices=["A", "B", "C", "D", "E", "S", "full_modern", "minimal_punctuation",
+                 "no_punctuation", "no_punctuation_no_labels", "scriptio_continua",
+                 "stephanus_layout"],
+        help="Output style (default: A)",
+    )
+
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        help="Output file path (default: <input>_<style>.txt). Use '-' for stdout.",
+    )
+
+    parser.add_argument(
+        "-p",
+        "--print",
+        action="store_true",
+        help="Print to console (stdout) instead of file",
+    )
+
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Verbose output",
+    )
+
+    args = parser.parse_args()
+
+    # Validate input file exists
+    if not args.input_file.exists():
+        print(f"Error: Input file not found: {args.input_file}", file=sys.stderr)
+        sys.exit(1)
+
+    # Map style argument to OutputStyle enum
+    style_map = {
+        "A": OutputStyle.FULL_MODERN,
+        "full_modern": OutputStyle.FULL_MODERN,
+        "B": OutputStyle.MINIMAL_PUNCTUATION,
+        "minimal_punctuation": OutputStyle.MINIMAL_PUNCTUATION,
+        "C": OutputStyle.NO_PUNCTUATION,
+        "no_punctuation": OutputStyle.NO_PUNCTUATION,
+        "D": OutputStyle.NO_PUNCTUATION_NO_LABELS,
+        "no_punctuation_no_labels": OutputStyle.NO_PUNCTUATION_NO_LABELS,
+        "E": OutputStyle.SCRIPTIO_CONTINUA,
+        "scriptio_continua": OutputStyle.SCRIPTIO_CONTINUA,
+        "S": OutputStyle.STEPHANUS_LAYOUT,
+        "stephanus_layout": OutputStyle.STEPHANUS_LAYOUT,
+    }
+
+    output_style = style_map[args.style]
+
+    # Determine output destination
+    output_to_stdout = args.print or (args.output and str(args.output) == "-")
+
+    if output_to_stdout:
+        output_file = None
+    elif args.output:
+        output_file = args.output
+    else:
+        # Generate default output filename in ./output/ directory
+        output_dir = Path("output")
+        output_dir.mkdir(exist_ok=True)
+        style_suffix = args.style.upper() if len(args.style) == 1 else args.style
+        output_file = output_dir / f"{args.input_file.stem}_{style_suffix}.txt"
+
+    # Warn if trying to write to canonical-greekLit directory
+    if output_file and "canonical-greekLit" in str(output_file):
+        print(
+            "Warning: You are writing to the canonical-greekLit source directory.",
+            file=sys.stderr,
+        )
+        print(
+            "This is not recommended. Consider using --output to specify a different location.",
+            file=sys.stderr,
+        )
+        response = input("Continue anyway? (y/N): ")
+        if response.lower() != "y":
+            print("Aborted.", file=sys.stderr)
+            sys.exit(0)
+
+    if args.verbose:
+        print(f"Processing: {args.input_file}", file=sys.stderr)
+        print(f"Style: {output_style.value}", file=sys.stderr)
+        if output_to_stdout:
+            print(f"Output: stdout", file=sys.stderr)
+        else:
+            print(f"Output: {output_file}", file=sys.stderr)
+
+    try:
+        # Parse XML
+        if args.verbose:
+            print("Parsing XML...", file=sys.stderr)
+        parser_obj = TEIParser(args.input_file)
+
+        # Extract text
+        if args.verbose:
+            print("Extracting dialogue...", file=sys.stderr)
+        extractor = TextExtractor(parser_obj)
+
+        # For Stephanus layout style, we need inline milestones
+        # For other styles, use regular dialogue extraction
+        # Actually, ALL styles need inline milestones to show markers correctly
+        if output_style == OutputStyle.STEPHANUS_LAYOUT:
+            # Style S needs special handling with extractor reference
+            dialogue = extractor.get_dialogue_text()
+        else:
+            # Other styles should use inline milestones for correct marker placement
+            dialogue = extractor.get_dialogue_text()
+
+        if args.verbose:
+            print(f"Found {len(dialogue)} dialogue entries", file=sys.stderr)
+
+        # Format output
+        if args.verbose:
+            print("Formatting text...", file=sys.stderr)
+        formatter = TextFormatter(dialogue, extractor=extractor, parser=parser_obj)
+        formatted_text = formatter.format(output_style)
+
+        # Output the text
+        if output_to_stdout:
+            # Print to console
+            print(formatted_text)
+        else:
+            # Write to file
+            if args.verbose:
+                print(f"Writing to {output_file}...", file=sys.stderr)
+            output_file.write_text(formatted_text, encoding="utf-8")
+
+            print(f"Successfully created: {output_file}")
+
+            if args.verbose:
+                print(f"Output size: {len(formatted_text)} characters", file=sys.stderr)
+
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
