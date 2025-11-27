@@ -45,3 +45,15 @@ class InvalidStyleError(PerseusError):
         self.style = style
         message = f"Cannot use style '{style}': {reason}"
         super().__init__(message)
+
+
+class InvalidStephanusRangeError(PerseusError):
+    """Raised when a requested Stephanus range doesn't exist or is invalid."""
+
+    def __init__(self, work_id: str, range_spec: str, reason: str = ""):
+        self.work_id = work_id
+        self.range_spec = range_spec
+        message = f"Invalid Stephanus range '{range_spec}' for work {work_id}"
+        if reason:
+            message += f": {reason}"
+        super().__init__(message)
