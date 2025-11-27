@@ -9,11 +9,13 @@ from pi_grapheion.parser import TEIParser
 from pi_grapheion.extractor import TextExtractor
 from pi_grapheion.formatter import TextFormatter, OutputStyle
 from pi_grapheion.catalog import PerseusCatalog
+from pi_grapheion.range_filter import RangeFilter
 from pi_grapheion.exceptions import (
     WorkNotFoundError,
     InvalidTEIStructureError,
     EmptyExtractionError,
     InvalidStyleError,
+    InvalidStephanusRangeError,
 )
 
 logger = logging.getLogger(__name__)
@@ -110,6 +112,9 @@ def handle_extract(args):
     # Check if input is a work ID (format: tlg####.tlg###) or a file path
     input_str = str(args.input_file)
 
+    # Track work_id for error messages
+    work_id = ""
+
     # If it looks like a work ID, resolve it
     if "." in input_str and not "/" in input_str and input_str.count(".") == 1:
         parts = input_str.split(".")
@@ -119,6 +124,7 @@ def handle_extract(args):
                 catalog = PerseusCatalog()
                 resolved_path = catalog.resolve_work_id(input_str)
                 input_file = resolved_path
+                work_id = input_str  # Save for range filter error messages
                 if args.verbose:
                     print(f"Resolved work ID '{input_str}' to: {input_file}", file=sys.stderr)
             except WorkNotFoundError as e:
@@ -210,6 +216,15 @@ def handle_extract(args):
             # Other styles should use inline milestones for correct marker placement
             dialogue = extractor.get_dialogue_text()
 
+        # Apply range filter if specified
+        if args.range:
+            if args.verbose:
+                print(f"Filtering to range: {args.range}", file=sys.stderr)
+            range_filter = RangeFilter()
+            dialogue = range_filter.filter(dialogue, args.range, work_id=work_id)
+            if args.verbose:
+                print(f"Filtered to {len(dialogue)} dialogue entries", file=sys.stderr)
+
         if args.verbose:
             print(f"Found {len(dialogue)} dialogue entries", file=sys.stderr)
 
@@ -234,7 +249,7 @@ def handle_extract(args):
             if args.verbose:
                 print(f"Output size: {len(formatted_text)} characters", file=sys.stderr)
 
-    except (InvalidTEIStructureError, EmptyExtractionError, InvalidStyleError) as e:
+    except (InvalidTEIStructureError, EmptyExtractionError, InvalidStyleError, InvalidStephanusRangeError) as e:
         # Custom exceptions with clear user messages
         print(f"Error: {e}", file=sys.stderr)
         if args.verbose:
@@ -270,6 +285,7 @@ Examples:
   %(prog)s extract input.xml               # Extract from file path
   %(prog)s extract tlg0059.tlg030 -s A     # Extract Republic, style A
   %(prog)s extract tlg0059.tlg004 --print  # Print Phaedo to stdout
+  %(prog)s extract tlg0059.tlg001 2a-3e    # Extract specific range
 
   # Different output styles
   %(prog)s extract tlg0059.tlg001 -s A     # Full modern edition (default)
@@ -312,14 +328,21 @@ Style Options:
 Examples:
   %(prog)s extract input.xml
   %(prog)s extract input.xml --style D
-  %(prog)s extract input.xml --style S --output stephanus.txt
-  %(prog)s extract tlg0059.tlg001 --style A  # Extract by work ID
+  %(prog)s extract input.xml 327a-328c          # Extract specific range
+  %(prog)s extract tlg0059.tlg001 327a --print  # Extract single section
+  %(prog)s extract tlg0059.tlg001 --style A     # Extract by work ID
         """,
     )
     extract_parser.add_argument(
         "input_file",
         type=Path,
         help="Path to TEI XML file or work ID (e.g., tlg0059.tlg001)",
+    )
+    extract_parser.add_argument(
+        "range",
+        nargs="?",
+        default=None,
+        help="Optional Stephanus range (e.g., '327a', '327-329', '327a-328c')",
     )
     extract_parser.add_argument(
         "-s",
