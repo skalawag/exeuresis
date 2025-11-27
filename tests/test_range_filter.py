@@ -1,7 +1,7 @@
 """Tests for Stephanus range filtering."""
 
 import pytest
-from pi_grapheion.range_filter import RangeSpec, RangeType, StephanusRangeParser
+from pi_grapheion.range_filter import RangeSpec, RangeType, StephanusRangeParser, StephanusComparator
 
 
 def test_range_spec_single_section():
@@ -98,3 +98,48 @@ class TestStephanusRangeParser:
         parser = StephanusRangeParser()
         with pytest.raises(ValueError, match="Empty range specification"):
             parser.parse("")
+
+
+class TestStephanusComparator:
+    """Tests for comparing Stephanus markers."""
+
+    def test_compare_same_markers(self):
+        """Test comparing identical markers."""
+        comp = StephanusComparator()
+        assert comp.compare("327a", "327a") == 0
+
+    def test_compare_different_sections_same_page(self):
+        """Test comparing different sections on same page."""
+        comp = StephanusComparator()
+        assert comp.compare("327a", "327b") < 0
+        assert comp.compare("327b", "327a") > 0
+        assert comp.compare("327a", "327e") < 0
+
+    def test_compare_different_pages(self):
+        """Test comparing markers on different pages."""
+        comp = StephanusComparator()
+        assert comp.compare("327a", "328a") < 0
+        assert comp.compare("328a", "327a") > 0
+        assert comp.compare("50b", "51a") < 0
+
+    def test_compare_page_to_section(self):
+        """Test comparing page marker to section marker."""
+        comp = StephanusComparator()
+        # Page marker (327) should be treated as start of that page (327a)
+        assert comp.compare("327", "327a") <= 0
+        assert comp.compare("327", "327b") < 0
+        assert comp.compare("328", "327e") > 0
+
+    def test_extract_page_number(self):
+        """Test extracting page number from marker."""
+        comp = StephanusComparator()
+        assert comp.extract_page_number("327a") == 327
+        assert comp.extract_page_number("327") == 327
+        assert comp.extract_page_number("5b") == 5
+
+    def test_extract_section_letter(self):
+        """Test extracting section letter from marker."""
+        comp = StephanusComparator()
+        assert comp.extract_section_letter("327a") == "a"
+        assert comp.extract_section_letter("327") == ""
+        assert comp.extract_section_letter("5e") == "e"

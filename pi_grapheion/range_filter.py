@@ -97,3 +97,56 @@ class StephanusRangeParser:
         """Check if a marker has a section letter."""
         match = self.MARKER_PATTERN.match(marker)
         return match and match.group(2) is not None
+
+
+class StephanusComparator:
+    """Compare Stephanus pagination markers."""
+
+    def compare(self, marker1: str, marker2: str) -> int:
+        """
+        Compare two Stephanus markers.
+
+        Args:
+            marker1: First marker (e.g., "327a", "327")
+            marker2: Second marker (e.g., "328b", "328")
+
+        Returns:
+            -1 if marker1 < marker2, 0 if equal, 1 if marker1 > marker2
+        """
+        page1 = self.extract_page_number(marker1)
+        page2 = self.extract_page_number(marker2)
+
+        # Compare pages first
+        if page1 < page2:
+            return -1
+        elif page1 > page2:
+            return 1
+
+        # Same page, compare sections
+        section1 = self.extract_section_letter(marker1)
+        section2 = self.extract_section_letter(marker2)
+
+        # Empty section (page-only marker) is treated as 'a' (start of page)
+        section1 = section1 or 'a'
+        section2 = section2 or 'a'
+
+        if section1 < section2:
+            return -1
+        elif section1 > section2:
+            return 1
+        else:
+            return 0
+
+    def extract_page_number(self, marker: str) -> int:
+        """Extract page number from marker."""
+        match = re.match(r'^(\d+)', marker)
+        if match:
+            return int(match.group(1))
+        raise ValueError(f"Invalid marker format: '{marker}'")
+
+    def extract_section_letter(self, marker: str) -> str:
+        """Extract section letter from marker (empty string if none)."""
+        match = re.match(r'^\d+([a-z])?$', marker)
+        if match:
+            return match.group(1) or ""
+        raise ValueError(f"Invalid marker format: '{marker}'")
