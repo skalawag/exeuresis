@@ -9,6 +9,7 @@ This tool extracts text from TEI XML files from the Perseus Digital Library and 
 ## Features
 
 - **Catalog browsing** - List authors, search works, resolve work IDs
+- **Range extraction** - Extract specific Stephanus passages (e.g., `2a`, `2-5`, `2a-3e`)
 - **Six output styles** (A-E, S) from modern to ancient formatting
 - **Multi-book work support** - Handles works like Plato's Republic with automatic book headers
 - **Stephanus pagination** - Preserves classical reference system for Plato
@@ -113,6 +114,36 @@ python -m pi_grapheion.cli extract tlg0059.tlg001 --print
 # Backward compatible with direct file paths
 python -m pi_grapheion.cli extract canonical-greekLit/data/tlg0059/tlg001/tlg0059.tlg001.perseus-grc1.xml
 ```
+
+#### Extracting Specific Ranges
+
+Extract specific Stephanus passages instead of entire works:
+
+```bash
+# Single section
+python -m pi_grapheion.cli extract tlg0059.tlg001 2a
+
+# Single page (all sections)
+python -m pi_grapheion.cli extract tlg0059.tlg001 2
+
+# Section range (inclusive)
+python -m pi_grapheion.cli extract tlg0059.tlg001 2a-3e
+
+# Page range
+python -m pi_grapheion.cli extract tlg0059.tlg001 2-5
+
+# Combine with output styles
+python -m pi_grapheion.cli extract tlg0059.tlg001 2a-3e --style S --print
+```
+
+**Range Syntax:**
+- `2a` - Single section
+- `2` - All sections from page 2 (2a, 2b, 2c, 2d, 2e)
+- `2a-3e` - Section range from 2a through 3e (inclusive on both ends)
+- `2-5` - Page range (all sections from pages 2, 3, 4, and 5)
+- Ranges spanning multiple books work seamlessly (e.g., Republic `354a-357b`)
+
+**Note:** Range filtering works with all output styles (A-E, S).
 
 #### Options
 ```bash
