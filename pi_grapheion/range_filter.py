@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List, Dict
 
+from pi_grapheion.exceptions import InvalidStephanusRangeError
+
 
 class RangeType(Enum):
     """Types of Stephanus ranges."""
@@ -150,3 +152,86 @@ class StephanusComparator:
         if match:
             return match.group(1) or ""
         raise ValueError(f"Invalid marker format: '{marker}'")
+
+
+class RangeFilter:
+    """Filter dialogue segments by Stephanus range."""
+
+    def __init__(self):
+        self.parser = StephanusRangeParser()
+        self.comparator = StephanusComparator()
+
+    def filter(self, segments: List[Dict], range_spec: str, work_id: str = "") -> List[Dict]:
+        """
+        Filter dialogue segments to only those within the specified range.
+
+        Args:
+            segments: List of dialogue segments with 'stephanus' field
+            range_spec: Range specification (e.g., "327a", "327-329", "327a-328c")
+            work_id: Optional work ID for error messages
+
+        Returns:
+            Filtered list of segments
+
+        Raises:
+            InvalidStephanusRangeError: If range is invalid or no segments match
+        """
+        if not segments:
+            raise InvalidStephanusRangeError(
+                work_id or "unknown",
+                range_spec,
+                "No segments found in document"
+            )
+
+        # Parse the range
+        try:
+            range_obj = self.parser.parse(range_spec)
+        except ValueError as e:
+            raise InvalidStephanusRangeError(work_id or "unknown", range_spec, str(e))
+
+        # Filter segments
+        filtered = []
+        for segment in segments:
+            if self._segment_in_range(segment, range_obj):
+                filtered.append(segment)
+
+        # Validate we found something
+        if not filtered:
+            raise InvalidStephanusRangeError(
+                work_id or "unknown",
+                range_spec,
+                f"No text found for range '{range_spec}' in this work"
+            )
+
+        return filtered
+
+    def _segment_in_range(self, segment: Dict, range_obj: RangeSpec) -> bool:
+        """
+        Check if a segment falls within the specified range.
+
+        A segment is included if ANY of its Stephanus markers fall within the range.
+        """
+        stephanus_markers = segment.get("stephanus", [])
+        if not stephanus_markers:
+            return False
+
+        for marker in stephanus_markers:
+            if self._marker_in_range(marker, range_obj):
+                return True
+
+        return False
+
+    def _marker_in_range(self, marker: str, range_obj: RangeSpec) -> bool:
+        """Check if a single marker falls within the range."""
+        if range_obj.is_page_range:
+            # For page ranges, extract page number and compare
+            marker_page = self.comparator.extract_page_number(marker)
+            start_page = self.comparator.extract_page_number(range_obj.start)
+            end_page = self.comparator.extract_page_number(range_obj.end)
+            return start_page <= marker_page <= end_page
+        else:
+            # For section ranges, do full comparison
+            start_cmp = self.comparator.compare(marker, range_obj.start)
+            end_cmp = self.comparator.compare(marker, range_obj.end)
+            # Marker is in range if: marker >= start AND marker <= end
+            return start_cmp >= 0 and end_cmp <= 0

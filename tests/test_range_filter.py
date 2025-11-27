@@ -1,7 +1,8 @@
 """Tests for Stephanus range filtering."""
 
 import pytest
-from pi_grapheion.range_filter import RangeSpec, RangeType, StephanusRangeParser, StephanusComparator
+from pi_grapheion.range_filter import RangeSpec, RangeType, StephanusRangeParser, StephanusComparator, RangeFilter
+from pi_grapheion.exceptions import InvalidStephanusRangeError
 
 
 def test_range_spec_single_section():
@@ -143,3 +144,73 @@ class TestStephanusComparator:
         assert comp.extract_section_letter("327a") == "a"
         assert comp.extract_section_letter("327") == ""
         assert comp.extract_section_letter("5e") == "e"
+
+
+class TestRangeFilter:
+    """Tests for filtering dialogue segments by Stephanus range."""
+
+    def setup_method(self):
+        """Create sample dialogue data for testing."""
+        self.sample_dialogue = [
+            {"speaker": "Σωκράτης", "label": "ΣΩ.", "text": "Text at 327a", "stephanus": ["327", "327a"], "said_id": 0},
+            {"speaker": "Γλαύκων", "label": "ΓΛ.", "text": "Text at 327b", "stephanus": ["327b"], "said_id": 1},
+            {"speaker": "Σωκράτης", "label": "ΣΩ.", "text": "Text at 327c", "stephanus": ["327c"], "said_id": 2},
+            {"speaker": "Γλαύκων", "label": "ΓΛ.", "text": "Text at 328a", "stephanus": ["328", "328a"], "said_id": 3},
+            {"speaker": "Σωκράτης", "label": "ΣΩ.", "text": "Text at 328b", "stephanus": ["328b"], "said_id": 4},
+            {"speaker": "Γλαύκων", "label": "ΓΛ.", "text": "Text at 329a", "stephanus": ["329", "329a"], "said_id": 5},
+        ]
+
+    def test_filter_single_section(self):
+        """Test filtering to a single section."""
+        filter_obj = RangeFilter()
+        result = filter_obj.filter(self.sample_dialogue, "327b")
+        assert len(result) == 1
+        assert result[0]["text"] == "Text at 327b"
+        assert result[0]["stephanus"] == ["327b"]
+
+    def test_filter_single_page(self):
+        """Test filtering to all sections from a single page."""
+        filter_obj = RangeFilter()
+        result = filter_obj.filter(self.sample_dialogue, "327")
+        assert len(result) == 3
+        assert result[0]["stephanus"] == ["327", "327a"]
+        assert result[1]["stephanus"] == ["327b"]
+        assert result[2]["stephanus"] == ["327c"]
+
+    def test_filter_section_range(self):
+        """Test filtering to a section range."""
+        filter_obj = RangeFilter()
+        result = filter_obj.filter(self.sample_dialogue, "327b-328a")
+        assert len(result) == 3
+        assert result[0]["text"] == "Text at 327b"
+        assert result[1]["text"] == "Text at 327c"
+        assert result[2]["text"] == "Text at 328a"
+
+    def test_filter_page_range(self):
+        """Test filtering to a page range."""
+        filter_obj = RangeFilter()
+        result = filter_obj.filter(self.sample_dialogue, "327-328")
+        assert len(result) == 5
+        # Should include all of 327 and 328
+        assert result[0]["stephanus"] == ["327", "327a"]
+        assert result[-1]["stephanus"] == ["328b"]
+
+    def test_filter_range_inclusive_end(self):
+        """Test that range end is inclusive."""
+        filter_obj = RangeFilter()
+        result = filter_obj.filter(self.sample_dialogue, "327a-327c")
+        assert len(result) == 3
+        # Should include 327c (end is inclusive)
+        assert result[-1]["stephanus"] == ["327c"]
+
+    def test_filter_nonexistent_range_raises_error(self):
+        """Test that filtering to nonexistent range raises error."""
+        filter_obj = RangeFilter()
+        with pytest.raises(InvalidStephanusRangeError, match="999z"):
+            filter_obj.filter(self.sample_dialogue, "999z")
+
+    def test_filter_empty_dialogue_raises_error(self):
+        """Test that filtering empty dialogue raises error."""
+        filter_obj = RangeFilter()
+        with pytest.raises(InvalidStephanusRangeError, match="No segments found"):
+            filter_obj.filter([], "327a")
