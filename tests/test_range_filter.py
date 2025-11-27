@@ -214,3 +214,41 @@ class TestRangeFilter:
         filter_obj = RangeFilter()
         with pytest.raises(InvalidStephanusRangeError, match="No segments found"):
             filter_obj.filter([], "327a")
+
+    def test_filter_cross_book_range(self):
+        """Test filtering range that spans multiple books."""
+        # Simulate Republic Book 1 ending at 354c, Book 2 starting at 357a
+        multi_book_dialogue = [
+            {"speaker": "Σωκράτης", "label": "ΣΩ.", "text": "Book 1 at 354a", "stephanus": ["354a"], "book": "1"},
+            {"speaker": "Γλαύκων", "label": "ΓΛ.", "text": "Book 1 at 354c", "stephanus": ["354c"], "book": "1"},
+            {"speaker": "", "label": "", "text": "ΠΟΛΙΤΕΙΑ Β", "stephanus": [], "book": "2"},  # Book header
+            {"speaker": "Σωκράτης", "label": "ΣΩ.", "text": "Book 2 at 357a", "stephanus": ["357", "357a"], "book": "2"},
+            {"speaker": "Γλαύκων", "label": "ΓΛ.", "text": "Book 2 at 357b", "stephanus": ["357b"], "book": "2"},
+        ]
+
+        filter_obj = RangeFilter()
+        result = filter_obj.filter(multi_book_dialogue, "354a-357b")
+
+        # Should include 4 entries (book header without marker is excluded)
+        assert len(result) == 4
+        assert result[0]["text"] == "Book 1 at 354a"
+        assert result[1]["text"] == "Book 1 at 354c"
+        # Book header excluded since it has no markers
+        assert result[2]["text"] == "Book 2 at 357a"
+        assert result[3]["text"] == "Book 2 at 357b"
+
+    def test_filter_preserves_segments_without_stephanus(self):
+        """Test that segments without Stephanus markers inside range are preserved."""
+        dialogue_with_gaps = [
+            {"speaker": "Σωκράτης", "label": "ΣΩ.", "text": "At 327a", "stephanus": ["327a"]},
+            {"speaker": "", "label": "", "text": "Title without marker", "stephanus": []},  # Should be excluded
+            {"speaker": "Γλαύκων", "label": "ΓΛ.", "text": "At 327b", "stephanus": ["327b"]},
+        ]
+
+        filter_obj = RangeFilter()
+        result = filter_obj.filter(dialogue_with_gaps, "327a-327b")
+
+        # Should only include segments with stephanus markers in range
+        assert len(result) == 2
+        assert result[0]["text"] == "At 327a"
+        assert result[1]["text"] == "At 327b"
