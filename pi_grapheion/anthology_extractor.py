@@ -2,6 +2,13 @@
 
 from dataclasses import dataclass
 from typing import List, Dict, Optional
+from pathlib import Path
+
+from pi_grapheion.catalog import PerseusCatalog
+from pi_grapheion.parser import TEIParser
+from pi_grapheion.extractor import TextExtractor
+from pi_grapheion.range_filter import RangeFilter
+from pi_grapheion.exceptions import WorkNotFoundError
 
 
 def parse_range_list(range_str: str) -> List[str]:
@@ -76,3 +83,117 @@ class AnthologyBlock:
         separator = "-" * width
 
         return f"{header_line}\n{separator}"
+
+
+class AnthologyExtractor:
+    """Extract anthology passages from multiple works and ranges."""
+
+    def __init__(self, data_dir: Optional[Path] = None):
+        """
+        Initialize AnthologyExtractor.
+
+        Args:
+            data_dir: Path to canonical-greekLit data directory
+                     (defaults to canonical-greekLit/data)
+        """
+        self.catalog = PerseusCatalog()
+        self.data_dir = data_dir or Path("canonical-greekLit/data")
+        self.range_filter = RangeFilter()
+
+    def extract_passages(self, passages: List[PassageSpec]) -> List[AnthologyBlock]:
+        """
+        Extract passages from multiple works.
+
+        Args:
+            passages: List of PassageSpec defining what to extract
+
+        Returns:
+            List of AnthologyBlock objects, one per range
+
+        Raises:
+            WorkNotFoundError: If a work ID is invalid
+        """
+        blocks = []
+
+        for passage in passages:
+            # Resolve work ID to file path
+            xml_file = self.catalog.resolve_work_id(passage.work_id)
+
+            # Get work metadata
+            work_info = self._get_work_info(passage.work_id)
+
+            # Parse the XML file
+            parser = TEIParser(xml_file)
+            extractor = TextExtractor(parser)
+            all_segments = extractor.get_dialogue_text()
+
+            # Extract each range as a separate block
+            for range_spec in passage.ranges:
+                filtered_segments = self.range_filter.filter(
+                    all_segments, range_spec, passage.work_id
+                )
+
+                # Determine book number (if any)
+                book = self._get_book_number(filtered_segments)
+
+                # Create anthology block
+                block = AnthologyBlock(
+                    work_title_en=work_info["title_en"],
+                    work_title_gr=work_info["title_gr"],
+                    range_display=range_spec,
+                    segments=filtered_segments,
+                    book=book,
+                )
+                blocks.append(block)
+
+        return blocks
+
+    def _get_work_info(self, work_id: str) -> Dict[str, str]:
+        """
+        Get work metadata from catalog.
+
+        Args:
+            work_id: Work ID (e.g., "tlg0059.tlg001")
+
+        Returns:
+            Dictionary with title_en and title_gr
+        """
+        # Split work ID
+        author_id, work_num = work_id.split(".")
+
+        # Get author
+        authors = self.catalog.list_authors()
+        author = None
+        for a in authors:
+            if a.tlg_id == author_id:
+                author = a
+                break
+
+        if not author:
+            raise WorkNotFoundError(work_id, f"Author {author_id} not found")
+
+        # Get work
+        works = self.catalog.list_works(author_id)
+        for work in works:
+            if work.work_id == work_num:
+                return {
+                    "title_en": work.title_en or "Unknown",
+                    "title_gr": work.title_grc or "Unknown",
+                }
+
+        raise WorkNotFoundError(work_id, f"Work {work_num} not found for author {author_id}")
+
+    def _get_book_number(self, segments: List[Dict]) -> Optional[str]:
+        """
+        Get book number from segments if present.
+
+        Args:
+            segments: List of dialogue segments
+
+        Returns:
+            Book number as string, or None if no book field
+        """
+        # Check first segment for book number
+        if segments and "book" in segments[0]:
+            return segments[0]["book"]
+        return None
