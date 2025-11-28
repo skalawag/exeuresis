@@ -309,18 +309,23 @@ class PerseusCatalog:
             tree = etree.parse(str(xml_file))
             root = tree.getroot()
 
-            # Find all milestone elements with unit="section"
+            # Find all milestone elements with unit="section" or unit="stephpage"
+            # Plato uses unit="section", Plutarch uses unit="stephpage"
             milestones = root.xpath(
-                "//tei:milestone[@unit='section']/@n",
+                "//tei:milestone[@unit='section' or @unit='stephpage']/@n",
                 namespaces=NS
             )
 
             if not milestones:
                 return ""
 
-            # Extract page numbers from Stephanus markers (e.g., "327a" -> 327)
+            # Extract page numbers from Stephanus markers (e.g., "327a" -> 327, "1012b" -> 1012)
             pages = set()
             for marker in milestones:
+                # Skip special markers like "chunk"
+                if not any(c.isdigit() for c in marker):
+                    continue
+
                 # Extract numeric part (page number)
                 page_num = ""
                 for char in marker:
