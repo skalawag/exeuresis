@@ -44,6 +44,31 @@ class TestCLIIntegration:
         assert "Plato" in result.stdout
         assert "Euthyphro" in result.stdout or "tlg001" in result.stdout
 
+    def test_list_works_by_author_name(self, cli_command):
+        """Test list-works command with author name instead of TLG ID."""
+        result = subprocess.run(
+            cli_command + ["list-works", "Plato"],
+            capture_output=True,
+            text=True
+        )
+
+        assert result.returncode == 0
+        assert "Plato" in result.stdout
+        assert "Euthyphro" in result.stdout
+        # Check that page ranges are included
+        assert "[2-16]" in result.stdout  # Euthyphro's page range
+
+    def test_list_works_by_author_name_lowercase(self, cli_command):
+        """Test list-works with lowercase author name."""
+        result = subprocess.run(
+            cli_command + ["list-works", "plato"],
+            capture_output=True,
+            text=True
+        )
+
+        assert result.returncode == 0
+        assert "Plato" in result.stdout
+
     def test_list_works_invalid_author(self, cli_command):
         """Test list-works with invalid author ID."""
         result = subprocess.run(

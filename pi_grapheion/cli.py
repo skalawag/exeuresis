@@ -74,19 +74,25 @@ def handle_list_works(args):
         print("Error: author_id is required when --all is not specified", file=sys.stderr)
         sys.exit(1)
 
-    # Get author info
-    author = catalog.get_author_info(args.author_id)
-    if not author:
+    # Resolve author name to TLG ID
+    author_id = catalog.resolve_author_name(args.author_id)
+    if not author_id:
         print(f"Author not found: {args.author_id}", file=sys.stderr)
         print("Use 'list-authors' to see available authors.", file=sys.stderr)
+        sys.exit(1)
+
+    # Get author info
+    author = catalog.get_author_info(author_id)
+    if not author:
+        print(f"Author not found: {author_id}", file=sys.stderr)
         sys.exit(1)
 
     print(f"{author}\n")
 
     # Get works
-    works = catalog.list_works(args.author_id)
+    works = catalog.list_works(author_id)
     if not works:
-        print(f"No works found for {args.author_id}", file=sys.stderr)
+        print(f"No works found for {author_id}", file=sys.stderr)
         return
 
     print(f"Found {len(works)} works:\n")

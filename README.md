@@ -18,7 +18,7 @@ This tool extracts text from TEI XML files from the Perseus Digital Library and 
 - **Work name aliases** - Use "euthyphro" instead of "tlg0059.tlg001" with custom alias support
 - **Comprehensive error handling** - Clear, actionable error messages
 - **Command-line interface** - Intuitive subcommands for all operations
-- **Test coverage: 77%** - 139 tests with TDD methodology
+- **Test coverage: 77%** - 145 tests with TDD methodology
 
 ## Installation
 
@@ -86,12 +86,21 @@ python -m pi_grapheion.cli search "Φαίδων"  # Greek text supported
 
 #### List Works
 ```bash
-# List works by specific author
+# List works by author name (case-insensitive)
+python -m pi_grapheion.cli list-works Plato
+python -m pi_grapheion.cli list-works plato  # Same result
+
+# Or by TLG ID
 python -m pi_grapheion.cli list-works tlg0059  # Plato's 36 works
 
 # List all 818 works from all authors
 python -m pi_grapheion.cli list-works --all
 ```
+
+**Output includes**:
+- Work ID and title (English and Greek)
+- Page range (Stephanus numbers) for easy reference
+- File path to the source XML
 
 ### Extract Text
 

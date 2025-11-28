@@ -34,18 +34,22 @@ class PerseusWork:
         title_en: str,
         title_grc: str = "",
         file_path: Optional[Path] = None,
+        page_range: str = "",
     ):
         self.tlg_id = tlg_id
         self.work_id = work_id
         self.title_en = title_en
         self.title_grc = title_grc
         self.file_path = file_path
+        self.page_range = page_range
 
     def __str__(self):
         if self.title_grc:
             result = f"  {self.work_id}: {self.title_en} ({self.title_grc})"
         else:
             result = f"  {self.work_id}: {self.title_en}"
+        if self.page_range:
+            result += f" [{self.page_range}]"
         if self.file_path:
             result += f"\n    File: {self.file_path}"
         return result
@@ -184,9 +188,14 @@ class PerseusCatalog:
                     greek_files = list(work_dir.glob("*.perseus-grc*.xml"))
                     file_path = greek_files[0] if greek_files else None
 
+                    # Extract page range if we have a file
+                    page_range = ""
+                    if file_path:
+                        page_range = self._extract_page_range(file_path)
+
                     works.append(
                         PerseusWork(
-                            tlg_id, work_dir.name, title_en, title_grc, file_path
+                            tlg_id, work_dir.name, title_en, title_grc, file_path, page_range
                         )
                     )
             except Exception as e:
@@ -250,6 +259,91 @@ class PerseusCatalog:
             if author.tlg_id == tlg_id:
                 return author
         return None
+
+    def resolve_author_name(self, name: str) -> Optional[str]:
+        """
+        Resolve an author name to their TLG ID.
+
+        Args:
+            name: Author name (English or Greek, case-insensitive) or TLG ID
+
+        Returns:
+            Author TLG ID (e.g., "tlg0059") or None if not found or ambiguous
+
+        Examples:
+            "Plato" -> "tlg0059"
+            "plato" -> "tlg0059"
+            "Πλάτων" -> "tlg0059"
+            "tlg0059" -> "tlg0059" (pass-through)
+        """
+        # If it's already a TLG ID, return it as-is
+        if name.startswith("tlg"):
+            return name if self.get_author_info(name) else None
+
+        # Search for matching authors
+        name_lower = name.lower()
+        matches = []
+
+        for author in self.list_authors():
+            if (name_lower == author.name_en.lower() or
+                name_lower == author.name_grc.lower()):
+                matches.append(author.tlg_id)
+
+        # Return match if exactly one found, None if ambiguous or not found
+        return matches[0] if len(matches) == 1 else None
+
+    def _extract_page_range(self, xml_file: Path) -> str:
+        """
+        Extract the Stephanus page range from a TEI XML file.
+
+        Args:
+            xml_file: Path to the TEI XML file
+
+        Returns:
+            Page range string (e.g., "2-16", "327-621") or empty string if none found
+        """
+        try:
+            # TEI namespace
+            NS = {"tei": "http://www.tei-c.org/ns/1.0"}
+
+            tree = etree.parse(str(xml_file))
+            root = tree.getroot()
+
+            # Find all milestone elements with unit="section"
+            milestones = root.xpath(
+                "//tei:milestone[@unit='section']/@n",
+                namespaces=NS
+            )
+
+            if not milestones:
+                return ""
+
+            # Extract page numbers from Stephanus markers (e.g., "327a" -> 327)
+            pages = set()
+            for marker in milestones:
+                # Extract numeric part (page number)
+                page_num = ""
+                for char in marker:
+                    if char.isdigit():
+                        page_num += char
+                    else:
+                        break
+                if page_num:
+                    pages.add(int(page_num))
+
+            if not pages:
+                return ""
+
+            # Return range as "min-max" or just "min" if only one page
+            sorted_pages = sorted(pages)
+            if len(sorted_pages) == 1:
+                return str(sorted_pages[0])
+            else:
+                return f"{sorted_pages[0]}-{sorted_pages[-1]}"
+
+        except Exception as e:
+            logger.debug(f"Could not extract page range from {xml_file}: {e}")
+            return ""
 
     def resolve_work_id(self, work_id: str) -> Path:
         """

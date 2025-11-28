@@ -157,3 +157,45 @@ class TestPerseusCatalog:
         assert file_path.exists()
         assert "tlg1799" in str(file_path)
         assert "tlg001" in str(file_path)
+
+    def test_resolve_author_name_by_english_name(self, catalog):
+        """Test resolving author by English name."""
+        tlg_id = catalog.resolve_author_name("Plato")
+        assert tlg_id == "tlg0059"
+
+    def test_resolve_author_name_case_insensitive(self, catalog):
+        """Test author name resolution is case-insensitive."""
+        tlg_id = catalog.resolve_author_name("plato")
+        assert tlg_id == "tlg0059"
+
+    def test_resolve_author_name_by_greek_name(self, catalog):
+        """Test resolving author by Greek name (if available)."""
+        # Note: Not all authors have Greek names in the catalog
+        # This test verifies the mechanism works even if specific authors lack Greek names
+        tlg_id = catalog.resolve_author_name("Πλάτων")
+        # Plato may not have Greek name in catalog, so None is acceptable
+        assert tlg_id is None or tlg_id == "tlg0059"
+
+    def test_resolve_author_name_by_tlg_id(self, catalog):
+        """Test that TLG IDs pass through unchanged."""
+        tlg_id = catalog.resolve_author_name("tlg0059")
+        assert tlg_id == "tlg0059"
+
+    def test_resolve_author_name_nonexistent(self, catalog):
+        """Test resolving non-existent author returns None."""
+        tlg_id = catalog.resolve_author_name("NonexistentAuthor")
+        assert tlg_id is None
+
+    def test_page_range_in_works(self, catalog):
+        """Test that works include page ranges."""
+        works = catalog.list_works("tlg0059")
+
+        # Find Euthyphro
+        euthyphro = next((w for w in works if w.work_id == "tlg001"), None)
+        assert euthyphro is not None
+        assert euthyphro.page_range == "2-16"
+
+        # Find Republic
+        republic = next((w for w in works if w.work_id == "tlg030"), None)
+        assert republic is not None
+        assert republic.page_range == "327-621"

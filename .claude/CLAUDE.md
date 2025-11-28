@@ -73,10 +73,13 @@ This file provides guidance to Claude Code when working with this repository.
 ### Catalog Browsing
 ```bash
 .venv/bin/python -m pi_grapheion.cli list-authors              # All 99 authors
-.venv/bin/python -m pi_grapheion.cli list-works tlg0059        # Plato's works
+.venv/bin/python -m pi_grapheion.cli list-works Plato          # By author name (case-insensitive)
+.venv/bin/python -m pi_grapheion.cli list-works tlg0059        # Or by TLG ID
 .venv/bin/python -m pi_grapheion.cli list-works --all          # All 818 works
 .venv/bin/python -m pi_grapheion.cli search "Republic"         # Search by title/author
 ```
+
+**Note**: `list-works` output now includes page ranges (Stephanus numbers) for each work.
 
 ### Anthology Extraction (NEW)
 Extract discontinuous passages from one or more works using work name aliases:
