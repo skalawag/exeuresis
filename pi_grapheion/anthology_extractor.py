@@ -4,6 +4,39 @@ from dataclasses import dataclass
 from typing import List, Dict, Optional
 
 
+def parse_range_list(range_str: str) -> List[str]:
+    """
+    Parse comma-separated range list into individual ranges.
+
+    Args:
+        range_str: Comma-separated ranges (e.g., "5a, 7b-c, 8")
+
+    Returns:
+        List of individual ranges
+
+    Raises:
+        ValueError: If range_str is empty or whitespace-only
+
+    Examples:
+        >>> parse_range_list("5a, 7b-c, 8")
+        ["5a", "7b-c", "8"]
+        >>> parse_range_list("5a,7b-c,8")
+        ["5a", "7b-c", "8"]
+    """
+    # Strip and check for empty
+    range_str = range_str.strip()
+    if not range_str:
+        raise ValueError("Range list cannot be empty")
+
+    # Split on comma and strip each part
+    ranges = [r.strip() for r in range_str.split(",")]
+
+    # Filter out any empty strings
+    ranges = [r for r in ranges if r]
+
+    return ranges
+
+
 @dataclass
 class PassageSpec:
     """Specification for passages to extract from a work."""
