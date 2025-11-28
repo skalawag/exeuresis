@@ -10,13 +10,15 @@ This tool extracts text from TEI XML files from the Perseus Digital Library and 
 
 - **Catalog browsing** - List authors, search works, resolve work IDs
 - **Range extraction** - Extract specific Stephanus passages (e.g., `2a`, `2-5`, `2a-3e`)
+- **Anthology extraction** - Extract discontinuous passages from multiple works with work name aliases
 - **Six output styles** (A-E, S) from modern to ancient formatting
 - **Multi-book work support** - Handles works like Plato's Republic with automatic book headers
 - **Stephanus pagination** - Preserves classical reference system for Plato
 - **Speaker label extraction** - Automatic detection for dialogue works
+- **Work name aliases** - Use "euthyphro" instead of "tlg0059.tlg001" with custom alias support
 - **Comprehensive error handling** - Clear, actionable error messages
 - **Command-line interface** - Intuitive subcommands for all operations
-- **Test coverage: 64%** - 73 tests with TDD methodology
+- **Test coverage: 77%** - 135 tests with TDD methodology
 
 ## Installation
 
@@ -144,6 +146,47 @@ python -m pi_grapheion.cli extract tlg0059.tlg001 2a-3e --style S --print
 - Ranges spanning multiple books work seamlessly (e.g., Republic `354a-357b`)
 
 **Note:** Range filtering works with all output styles (A-E, S).
+
+#### Anthology Extraction (Discontinuous Passages)
+
+Extract multiple non-contiguous passages from one or more works using work name aliases:
+
+```bash
+# Single work, multiple discontinuous ranges
+python -m pi_grapheion.cli extract euthyphro --passages 5a,7b-7c,10a
+
+# Multiple works with different passages
+python -m pi_grapheion.cli extract euthyphro --passages 5a republic --passages 354b
+
+# Using work IDs instead of aliases
+python -m pi_grapheion.cli extract tlg0059.tlg001 --passages 2a,3b tlg0059.tlg030 --passages 327a
+
+# With output options
+python -m pi_grapheion.cli extract euthyphro --passages 5a,7b-7c --style A --print
+```
+
+**Anthology Features:**
+- **Work name aliases**: Use "euthyphro" or "republic" instead of TLG IDs
+- **Discontinuous ranges**: Extract non-contiguous passages like "5a, 7b-7c, 10a"
+- **Multi-work extraction**: Combine passages from multiple works in one output
+- **Contextual headers**: Each block shows work title (Greek + English) and range
+- **Block separation**: Blank lines separate different passages
+- **Book number support**: Multi-book works display as "Republic (Πολιτεία) 1.354b"
+- **Style restriction**: Only styles A-D supported (E and S raise error)
+
+**Alias Configuration:**
+- Automatic aliases from catalog (English/Greek work titles)
+- User config: `~/.pi-grapheion/aliases.yaml`
+- Project config: `.pi-grapheion/aliases.yaml` (overrides user config)
+- Case-insensitive matching
+
+Example `aliases.yaml`:
+```yaml
+aliases:
+  euth: tlg0059.tlg001
+  rep: tlg0059.tlg030
+  phaedo: tlg0059.tlg004
+```
 
 #### Options
 ```bash
@@ -283,21 +326,32 @@ done
 pi-grapheion/
 ├── pi_grapheion/
 │   ├── __init__.py
-│   ├── parser.py        # TEI XML parsing with structure validation
-│   ├── extractor.py     # Text extraction from parsed XML
-│   ├── formatter.py     # Output formatting (styles A-E, S)
-│   ├── catalog.py       # Perseus catalog browsing and search
-│   ├── exceptions.py    # Custom exceptions
-│   └── cli.py           # Command-line interface
+│   ├── parser.py               # TEI XML parsing with structure validation
+│   ├── extractor.py            # Text extraction from parsed XML
+│   ├── formatter.py            # Output formatting (styles A-E, S)
+│   ├── catalog.py              # Perseus catalog browsing and search
+│   ├── work_resolver.py        # Work name alias resolution
+│   ├── anthology_extractor.py  # Anthology extraction for multiple passages
+│   ├── anthology_formatter.py  # Anthology block formatting with headers
+│   ├── range_filter.py         # Stephanus range filtering
+│   ├── exceptions.py           # Custom exceptions
+│   └── cli.py                  # Command-line interface
 ├── tests/
 │   ├── test_parser.py
 │   ├── test_extractor.py
 │   ├── test_formatter.py
 │   ├── test_catalog.py
+│   ├── test_work_resolver.py
+│   ├── test_anthology_data.py
+│   ├── test_anthology_extractor.py
+│   ├── test_anthology_formatter.py
+│   ├── test_range_parser.py
+│   ├── test_range_filter.py
 │   ├── test_cli.py
+│   ├── test_cli_integration.py
 │   ├── test_style_validation.py
 │   ├── test_stephanus_formatting.py
-│   └── fixtures/        # Test XML samples
+│   └── fixtures/               # Test XML samples
 ├── canonical-greekLit/  # Perseus corpus (separate git clone)
 │   └── data/
 │       ├── tlg0059/     # Plato (36 works)
@@ -328,24 +382,30 @@ XML File → TEIParser → TextExtractor → TextFormatter → Output
 - `extractor.py` - Text extraction, Stephanus marker handling, dialogue segmentation
 - `formatter.py` - Six output styles with style-specific validation
 - `catalog.py` - Browse 99 authors and 818 works, work ID resolution
-- `exceptions.py` - `WorkNotFoundError`, `InvalidTEIStructureError`, `EmptyExtractionError`, `InvalidStyleError`
-- `cli.py` - Argparse-based CLI with subcommands
+- `work_resolver.py` - Work name alias resolution with config file support
+- `anthology_extractor.py` - Multi-passage extraction with range filtering
+- `anthology_formatter.py` - Block formatting with contextual headers
+- `range_filter.py` - Stephanus range parsing and filtering
+- `exceptions.py` - `WorkNotFoundError`, `InvalidTEIStructureError`, `EmptyExtractionError`, `InvalidStyleError`, `InvalidStephanusRangeError`
+- `cli.py` - Argparse-based CLI with subcommands and anthology mode
 
 ### Running Tests
 
 ```bash
-# Run all 73 tests
+# Run all 135 tests
 pytest
 
-# Run with coverage (current: 64%)
-pytest --cov=src --cov-report=term-missing
+# Run with coverage (current: 77%)
+pytest --cov=pi_grapheion --cov-report=term-missing
 
 # Run specific test suite
 pytest tests/test_catalog.py -v
+pytest tests/test_anthology_extractor.py -v
 pytest tests/test_style_validation.py -v
 
 # Run tests matching pattern
 pytest -k "stephanus" -v
+pytest -k "anthology" -v
 ```
 
 ### Code Quality

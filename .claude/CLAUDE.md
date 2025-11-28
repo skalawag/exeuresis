@@ -29,8 +29,12 @@ This file provides guidance to Claude Code when working with this repository.
 - `extractor.py` - Extracts text from `<said>` elements, handles Stephanus markers
 - `formatter.py` - Applies output styles (A-E, S)
 - `catalog.py` - Browses/searches Perseus catalog (99 authors, 818 works)
-- `cli.py` - Command-line interface with subcommands
-- `exceptions.py` - Custom exceptions (WorkNotFoundError, InvalidTEIStructureError, EmptyExtractionError)
+- `work_resolver.py` - Resolves work name aliases to TLG IDs
+- `anthology_extractor.py` - Extracts multiple passages from one or more works
+- `anthology_formatter.py` - Formats anthology blocks with headers
+- `range_filter.py` - Filters segments by Stephanus ranges
+- `cli.py` - Command-line interface with subcommands and anthology mode
+- `exceptions.py` - Custom exceptions (WorkNotFoundError, InvalidTEIStructureError, EmptyExtractionError, InvalidStephanusRangeError)
 
 **Data flow**:
 ```python
@@ -69,6 +73,33 @@ This file provides guidance to Claude Code when working with this repository.
 .venv/bin/python -m pi_grapheion.cli list-works --all          # All 818 works
 .venv/bin/python -m pi_grapheion.cli search "Republic"         # Search by title/author
 ```
+
+### Anthology Extraction (NEW)
+Extract discontinuous passages from one or more works using work name aliases:
+
+```bash
+# Single work, multiple ranges
+.venv/bin/python -m pi_grapheion.cli extract euthyphro --passages 5a,7b-7c,10a
+
+# Multiple works
+.venv/bin/python -m pi_grapheion.cli extract euthyphro --passages 5a republic --passages 354b
+
+# Using TLG IDs
+.venv/bin/python -m pi_grapheion.cli extract tlg0059.tlg001 --passages 2a,3b tlg0059.tlg030 --passages 327a
+```
+
+**Features**:
+- Work name aliases: Use "euthyphro" instead of "tlg0059.tlg001"
+- Discontinuous ranges: Extract non-contiguous passages (e.g., "5a, 7b-7c, 10a")
+- Multi-work extraction: Combine passages from different works
+- Contextual headers: Each block shows work title (Greek + English) and range
+- Style restriction: Only A-D supported (E and S raise `InvalidStyleError`)
+
+**Alias Configuration**:
+- User config: `~/.pi-grapheion/aliases.yaml`
+- Project config: `.pi-grapheion/aliases.yaml` (overrides user)
+- Automatic from catalog (English/Greek titles)
+- Case-insensitive matching
 
 ### Logging & Debugging
 ```bash
