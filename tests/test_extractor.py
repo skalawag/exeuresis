@@ -27,6 +27,18 @@ class TestTextExtractor:
             / "tlg0059.tlg001.perseus-grc1.xml"
         )
 
+    @pytest.fixture
+    def plutarch_xml_path(self):
+        """Path to actual Plutarch De animae procreatione XML file."""
+        return (
+            Path(__file__).parent.parent
+            / "canonical-greekLit"
+            / "data"
+            / "tlg0007"
+            / "tlg134"
+            / "tlg0007.tlg134.perseus-grc2.xml"
+        )
+
     def test_extract_dialogue_text(self, sample_xml_path):
         """Test 4: Should extract text from <said> elements."""
         from pi_grapheion.parser import TEIParser
@@ -145,3 +157,60 @@ class TestTextExtractor:
 
         assert str(empty_xml) in str(exc_info.value)
         assert "No text" in str(exc_info.value)
+
+    def test_extract_plutarch_stephpage_markers(self, plutarch_xml_path):
+        """Test extraction of Plutarch texts with stephpage pagination markers."""
+        from pi_grapheion.parser import TEIParser
+        from pi_grapheion.extractor import TextExtractor
+
+        if not plutarch_xml_path.exists():
+            pytest.skip("Plutarch XML file not found")
+
+        parser = TEIParser(plutarch_xml_path)
+        extractor = TextExtractor(parser)
+
+        text_entries = extractor.get_dialogue_text()
+
+        # Should have many entries
+        assert len(text_entries) > 10
+
+        # All entries should have required fields
+        for entry in text_entries:
+            assert "speaker" in entry
+            assert "label" in entry
+            assert "text" in entry
+            assert "stephanus" in entry
+
+        # Find entries with stephpage markers
+        entries_with_markers = [e for e in text_entries if e["stephanus"]]
+        assert len(entries_with_markers) > 0, "Should have entries with stephpage markers"
+
+        # Check that markers are in expected format (e.g., "1012b", "1012c", etc.)
+        all_markers = [marker for e in entries_with_markers for marker in e["stephanus"]]
+        assert any("1012" in marker for marker in all_markers), "Should contain 1012 series markers"
+
+    def test_stephanus_marker_types_support(self, euthyphro_xml_path, plutarch_xml_path):
+        """Test that both unit='section' (Plato) and unit='stephpage' (Plutarch) are supported."""
+        from pi_grapheion.parser import TEIParser
+        from pi_grapheion.extractor import TextExtractor
+
+        if not euthyphro_xml_path.exists() or not plutarch_xml_path.exists():
+            pytest.skip("Required XML files not found")
+
+        # Test Plato (section markers)
+        plato_parser = TEIParser(euthyphro_xml_path)
+        plato_extractor = TextExtractor(plato_parser)
+        plato_entries = plato_extractor.get_dialogue_text()
+        plato_markers = [marker for e in plato_entries for marker in e["stephanus"]]
+        assert len(plato_markers) > 0, "Should extract section markers from Plato"
+        # Plato markers are like "2a", "2b", "3", etc.
+        assert any(marker in ["2a", "2b", "2c", "2d", "3"] for marker in plato_markers[:20])
+
+        # Test Plutarch (stephpage markers)
+        plutarch_parser = TEIParser(plutarch_xml_path)
+        plutarch_extractor = TextExtractor(plutarch_parser)
+        plutarch_entries = plutarch_extractor.get_dialogue_text()
+        plutarch_markers = [marker for e in plutarch_entries for marker in e["stephanus"]]
+        assert len(plutarch_markers) > 0, "Should extract stephpage markers from Plutarch"
+        # Plutarch markers are like "1012b", "1012c", "1013a", etc.
+        assert any("1012" in marker or "1013" in marker for marker in plutarch_markers[:20])

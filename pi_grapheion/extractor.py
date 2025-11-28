@@ -234,6 +234,9 @@ class TextExtractor:
         """
         Extract Stephanus pagination markers from milestone elements.
 
+        Supports both Plato's section markers (unit="section") and
+        Plutarch's Stephanus page markers (unit="stephpage").
+
         Args:
             element: An lxml Element to search within
 
@@ -241,12 +244,15 @@ class TextExtractor:
             List of Stephanus marker values (e.g., ["2", "2a"])
         """
         markers = []
-        # Only extract section milestones, not page milestones
-        # Page milestones are redundant with section milestones (e.g., "61" + "61a")
+        # Extract section milestones (Plato texts) and stephpage milestones (Plutarch texts)
         # Note: Some section milestones don't have resp="Stephanus" but are still valid
-        milestones = element.findall(".//tei:milestone[@unit='section']", self.NS)
+        section_milestones = element.findall(".//tei:milestone[@unit='section']", self.NS)
+        stephpage_milestones = element.findall(".//tei:milestone[@unit='stephpage']", self.NS)
 
-        for milestone in milestones:
+        # Combine both types of milestones
+        all_milestones = section_milestones + stephpage_milestones
+
+        for milestone in all_milestones:
             n_value = milestone.get("n")
             if n_value:
                 markers.append(n_value)
@@ -394,15 +400,10 @@ class TextExtractor:
                     # Mark that next segment starts a paragraph
                     is_paragraph_start = True
 
-                # Check if this is a Stephanus section milestone (not page milestone)
+                # Check if this is a Stephanus section milestone (Plato) or stephpage (Plutarch)
                 # Note: Some section milestones don't have resp="Stephanus" but are still valid
-                elif child.get("unit") == "section":
-                    # Add this Stephanus marker to pending FIRST
-                    n_value = child.get("n")
-                    if n_value:
-                        pending_markers.append(n_value)
-
-                    # Then save current segment if it has text (with marker included)
+                elif child.get("unit") in ("section", "stephpage"):
+                    # FIRST: Save current segment if it has text (with OLD pending markers)
                     if current_text_parts:
                         text = " ".join(current_text_parts)
                         text = " ".join(text.split()).strip()
@@ -412,12 +413,17 @@ class TextExtractor:
                         if text:
                             segments.append({
                                 "text": text,
-                                "stephanus": pending_markers.copy(),  # Attach pending markers
+                                "stephanus": pending_markers.copy(),  # Attach OLD pending markers
                                 "is_paragraph_start": is_paragraph_start
                             })
-                            pending_markers = []  # Clear after attaching
                             is_paragraph_start = False
                         current_text_parts = []
+
+                    # THEN: Clear pending markers and add THIS milestone as the NEW pending marker
+                    pending_markers = []
+                    n_value = child.get("n")
+                    if n_value:
+                        pending_markers.append(n_value)
 
                 # Add tail text after the milestone
                 if child.tail:

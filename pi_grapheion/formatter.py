@@ -829,27 +829,35 @@ class TextFormatter:
             page_num = stephanus_list[0]
             return f"[{page_num}]"
 
-        # Single marker or multiple markers (but not a "page start" pattern)
+        # Get the first marker
         first_marker = stephanus_list[0]
 
         # If it's a pure digit, it's a new page start
         if first_marker.isdigit():
             return f"[{first_marker}]"
 
-        # It's number+letter (e.g., "58b")
+        # It's number+letter (e.g., "58b", "1012b")
         if len(first_marker) > 1 and first_marker[-1].isalpha():
             current_page = first_marker[:-1]
             letter = first_marker[-1]
 
+            # If this is the first marker (no previous context)
+            if last_page_num is None:
+                # If it's 'a', show just the page number (Plato convention)
+                if letter == 'a':
+                    return f"[{current_page}]"
+                # Otherwise show the full marker (e.g., [1012b] for Plutarch)
+                else:
+                    return f"[{first_marker}]"
             # If we're on the same page as last time, show only the letter
-            if last_page_num and current_page == last_page_num:
+            elif current_page == last_page_num:
                 return f"[{letter}]"
-            # If it's 'a' (first section), show the full page number
+            # If it's 'a' (first section of a new page), show the full page number
             elif letter == 'a':
                 return f"[{current_page}]"
-            # Otherwise show just the letter (subsequent section)
+            # Otherwise show the full marker (transitioning to new page with non-'a')
             else:
-                return f"[{letter}]"
+                return f"[{first_marker}]"
 
         # Fallback
         return f"[{first_marker}]"

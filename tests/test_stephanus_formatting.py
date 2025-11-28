@@ -62,8 +62,8 @@ class TestStephanusFormatting:
         assert "[2b]" not in output
         assert "[2c]" not in output
 
-    def test_subsequent_section_without_prior_context_shows_letter(self):
-        """Subsequent sections (e.g., 2b) without prior page context should still show letter."""
+    def test_subsequent_section_without_prior_context_shows_full_marker(self):
+        """First marker starting with non-'a' section (e.g., 2b for Plutarch) shows full marker."""
         dialogue_data = [
             {
                 "speaker": "Εὐθύφρων",
@@ -82,11 +82,11 @@ class TestStephanusFormatting:
         formatter = TextFormatter(dialogue_data)
         output = formatter.format(OutputStyle.FULL_MODERN)
 
-        # Should show [b] and [c] (subsequent sections always show letter only)
-        assert "[b]" in output
+        # First marker (2b) should show full reference since it's not 'a' and has no prior context
+        assert "[2b]" in output
+        # Subsequent marker on same page should show letter only
         assert "[c]" in output
-        # Should NOT show full references
-        assert "[2b]" not in output
+        # Should NOT show [2c] (subsequent on same page)
         assert "[2c]" not in output
 
     def test_mixed_sections_formatting(self):
