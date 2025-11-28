@@ -1,6 +1,7 @@
 # Project-specific directories
 canonical-greekLit/
 output/
+docs/plans/
 
 # Claude Code local settings
 .claude/settings.local.json
