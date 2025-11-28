@@ -2,6 +2,7 @@
 canonical-greekLit/
 output/
 docs/plans/
+.worktrees
 
 # Claude Code local settings
 .claude/settings.local.json
