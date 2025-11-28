@@ -107,3 +107,51 @@ def test_cli_extract_page_range(monkeypatch, capsys):
     captured = capsys.readouterr()
     # Should contain text from page 2 (all sections)
     assert "2a" in captured.out or "2" in captured.out or "[a]" in captured.out
+
+
+def test_cli_extract_anthology_single_work(monkeypatch, capsys):
+    """Test anthology extraction from single work with multiple ranges."""
+    monkeypatch.setattr(sys, 'argv', [
+        'pi_grapheion',
+        'extract',
+        'euthyphro',
+        '--passages', '5a,7b-7c',
+        '--print'
+    ])
+
+    try:
+        main()
+    except SystemExit as e:
+        assert e.code == 0
+
+    captured = capsys.readouterr()
+    # Should contain header for Euthyphro
+    assert "Euthyphro" in captured.out or "Εὐθύφρων" in captured.out
+    # Should contain range displays
+    assert "5a" in captured.out
+    assert "7b-7c" in captured.out or "7b" in captured.out
+
+
+def test_cli_extract_anthology_multiple_works(monkeypatch, capsys):
+    """Test anthology extraction from multiple works."""
+    monkeypatch.setattr(sys, 'argv', [
+        'pi_grapheion',
+        'extract',
+        'euthyphro',
+        '--passages', '5a',
+        'republic',
+        '--passages', '354b',
+        '--print'
+    ])
+
+    try:
+        main()
+    except SystemExit as e:
+        assert e.code == 0
+
+    captured = capsys.readouterr()
+    # Should contain headers for both works
+    assert "Euthyphro" in captured.out or "Εὐθύφρων" in captured.out
+    assert "Republic" in captured.out or "Πολιτεία" in captured.out
+    # Should have blank line separators between blocks
+    assert "\n\n" in captured.out

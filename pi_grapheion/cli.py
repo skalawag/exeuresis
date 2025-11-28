@@ -10,6 +10,13 @@ from pi_grapheion.extractor import TextExtractor
 from pi_grapheion.formatter import TextFormatter, OutputStyle
 from pi_grapheion.catalog import PerseusCatalog
 from pi_grapheion.range_filter import RangeFilter
+from pi_grapheion.work_resolver import WorkResolver
+from pi_grapheion.anthology_extractor import (
+    AnthologyExtractor,
+    PassageSpec,
+    parse_range_list,
+)
+from pi_grapheion.anthology_formatter import AnthologyFormatter
 from pi_grapheion.exceptions import (
     WorkNotFoundError,
     InvalidTEIStructureError,
@@ -107,10 +114,149 @@ def handle_search(args):
         print(work)
 
 
+def parse_anthology_args(input_files, passage_specs):
+    """
+    Parse anthology arguments into PassageSpec objects.
+
+    Args:
+        input_files: List of work names/IDs from positional arguments
+        passage_specs: List of range specifications from --passages flags
+
+    Returns:
+        List of PassageSpec objects
+
+    The syntax is: work1 --passages ranges1 work2 --passages ranges2
+    """
+    if not passage_specs:
+        return None
+
+    # Match work names with passage specs
+    # Each work is followed by a --passages flag
+    passages = []
+    work_idx = 0
+
+    for passage_spec in passage_specs:
+        if work_idx >= len(input_files):
+            raise ValueError(
+                "Error: --passages flag without corresponding work name. "
+                "Syntax: work1 --passages ranges1 work2 --passages ranges2"
+            )
+
+        work_name = str(input_files[work_idx])
+        ranges = parse_range_list(passage_spec)
+        passages.append(PassageSpec(work_id=work_name, ranges=ranges))
+        work_idx += 1
+
+    return passages
+
+
+def handle_anthology_extract(args):
+    """Handle anthology extraction mode."""
+    # Collect all work names from input_file
+    # In anthology mode, the optional 'range' positional may capture additional work names
+    work_names = list(args.input_file)
+    if args.range:
+        # In anthology mode, 'range' is actually another work name
+        work_names.append(args.range)
+
+    # Parse anthology arguments
+    try:
+        passage_specs = parse_anthology_args(work_names, args.passage_specs)
+    except ValueError as e:
+        print(str(e), file=sys.stderr)
+        sys.exit(1)
+
+    # Resolve work names to TLG IDs
+    resolver = WorkResolver()
+    resolved_passages = []
+    for spec in passage_specs:
+        try:
+            work_id = resolver.resolve(spec.work_id)
+            resolved_passages.append(PassageSpec(work_id=work_id, ranges=spec.ranges))
+        except WorkNotFoundError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            sys.exit(1)
+
+    # Map style argument
+    style_map = {
+        "A": OutputStyle.FULL_MODERN,
+        "full_modern": OutputStyle.FULL_MODERN,
+        "B": OutputStyle.MINIMAL_PUNCTUATION,
+        "minimal_punctuation": OutputStyle.MINIMAL_PUNCTUATION,
+        "C": OutputStyle.NO_PUNCTUATION,
+        "no_punctuation": OutputStyle.NO_PUNCTUATION,
+        "D": OutputStyle.NO_PUNCTUATION_NO_LABELS,
+        "no_punctuation_no_labels": OutputStyle.NO_PUNCTUATION_NO_LABELS,
+        "E": OutputStyle.SCRIPTIO_CONTINUA,
+        "scriptio_continua": OutputStyle.SCRIPTIO_CONTINUA,
+        "S": OutputStyle.STEPHANUS_LAYOUT,
+        "stephanus_layout": OutputStyle.STEPHANUS_LAYOUT,
+    }
+    output_style = style_map[args.style]
+
+    # Determine output destination
+    output_to_stdout = args.print or (args.output and str(args.output) == "-")
+
+    if args.verbose:
+        print(f"Anthology extraction mode", file=sys.stderr)
+        print(f"Extracting {len(resolved_passages)} work(s)", file=sys.stderr)
+        print(f"Style: {output_style.value}", file=sys.stderr)
+
+    try:
+        # Extract anthology blocks
+        extractor = AnthologyExtractor()
+        blocks = extractor.extract_passages(resolved_passages)
+
+        # Format blocks
+        formatter = AnthologyFormatter(style=output_style)
+        output_text = formatter.format_blocks(blocks)
+
+        # Output
+        if output_to_stdout:
+            print(output_text)
+        else:
+            # Generate default output filename
+            if args.output:
+                output_file = args.output
+            else:
+                output_dir = Path("output")
+                output_dir.mkdir(exist_ok=True)
+                style_suffix = args.style.upper() if len(args.style) == 1 else args.style
+                output_file = output_dir / f"anthology_{style_suffix}.txt"
+
+            with open(output_file, "w", encoding="utf-8") as f:
+                f.write(output_text)
+
+            print(f"Anthology written to: {output_file}", file=sys.stderr)
+
+    except InvalidStyleError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        if args.debug if hasattr(args, 'debug') else False:
+            raise
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
 def handle_extract(args):
-    """Handle the extract command (original functionality)."""
-    # Check if input is a work ID (format: tlg####.tlg###) or a file path
-    input_str = str(args.input_file)
+    """Handle the extract command (supports both single extraction and anthology)."""
+    # Check if we're in anthology mode
+    if hasattr(args, 'passage_specs') and args.passage_specs:
+        handle_anthology_extract(args)
+        return
+
+    # Original single-extraction mode
+    # input_file is a list due to nargs='+', take first element
+    input_files_list = args.input_file if isinstance(args.input_file, list) else [args.input_file]
+    input_file_arg = Path(input_files_list[0])
+
+    # If there are 2 elements in input_file, the second is the range
+    # (This happens when: extract file.xml 2a)
+    if len(input_files_list) == 2 and args.range is None:
+        args.range = input_files_list[1]
+
+    input_str = str(input_file_arg)
 
     # Track work_id for error messages
     work_id = ""
@@ -131,9 +277,9 @@ def handle_extract(args):
                 print(f"Error: {e}", file=sys.stderr)
                 sys.exit(1)
         else:
-            input_file = args.input_file
+            input_file = input_file_arg
     else:
-        input_file = args.input_file
+        input_file = input_file_arg
 
     # Validate input file exists
     if not input_file.exists():
@@ -335,14 +481,21 @@ Examples:
     )
     extract_parser.add_argument(
         "input_file",
-        type=Path,
-        help="Path to TEI XML file or work ID (e.g., tlg0059.tlg001)",
+        nargs='+',
+        help="Path to TEI XML file, work ID (e.g., tlg0059.tlg001), or work name(s) for anthology",
     )
     extract_parser.add_argument(
         "range",
         nargs="?",
         default=None,
         help="Optional Stephanus range (e.g., '327a', '327-329', '327a-328c')",
+    )
+    extract_parser.add_argument(
+        "--passages",
+        action="append",
+        dest="passage_specs",
+        metavar="RANGES",
+        help="Anthology mode: comma-separated ranges for preceding work (e.g., --passages 5a,7b-c)",
     )
     extract_parser.add_argument(
         "-s",
