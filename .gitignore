@@ -3,6 +3,7 @@ canonical-greekLit/
 output/
 docs/plans/
 .worktrees
+aliases.yaml
 
 # Claude Code local settings
 .claude/settings.local.json
