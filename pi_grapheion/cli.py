@@ -261,25 +261,28 @@ def handle_extract(args):
     # Track work_id for error messages
     work_id = ""
 
-    # If it looks like a work ID, resolve it
-    if "." in input_str and not "/" in input_str and input_str.count(".") == 1:
-        parts = input_str.split(".")
-        if len(parts) == 2 and parts[0].startswith("tlg") and parts[1].startswith("tlg"):
-            # This looks like a work ID - try to resolve it
-            try:
-                catalog = PerseusCatalog()
-                resolved_path = catalog.resolve_work_id(input_str)
-                input_file = resolved_path
-                work_id = input_str  # Save for range filter error messages
-                if args.verbose:
-                    print(f"Resolved work ID '{input_str}' to: {input_file}", file=sys.stderr)
-            except WorkNotFoundError as e:
-                print(f"Error: {e}", file=sys.stderr)
-                sys.exit(1)
-        else:
-            input_file = input_file_arg
-    else:
+    # Check if this is a file path (contains / or ends with .xml)
+    if "/" in input_str or input_str.endswith(".xml"):
+        # It's a file path, use it directly
         input_file = input_file_arg
+    else:
+        # It could be a work ID or work name alias
+        # Try to resolve it using WorkResolver
+        try:
+            resolver = WorkResolver()
+            work_id = resolver.resolve(input_str)
+
+            # Now resolve the work ID to a file path
+            catalog = PerseusCatalog()
+            input_file = catalog.resolve_work_id(work_id)
+
+            if args.verbose:
+                if input_str != work_id:
+                    print(f"Resolved work name '{input_str}' to work ID '{work_id}'", file=sys.stderr)
+                print(f"Resolved work ID '{work_id}' to: {input_file}", file=sys.stderr)
+        except WorkNotFoundError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            sys.exit(1)
 
     # Validate input file exists
     if not input_file.exists():

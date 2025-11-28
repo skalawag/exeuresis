@@ -225,3 +225,35 @@ class TestCLIIntegration:
         if Path("canonical-greekLit/data/tlg0059/tlg001/tlg0059.tlg001.perseus-grc1.xml").exists():
             assert result.returncode == 0
             assert output_file.exists()
+
+    def test_extract_by_work_name_alias(self, cli_command):
+        """Test extract command with work name alias (e.g., 'euthyphro')."""
+        result = subprocess.run(
+            cli_command + ["extract", "euthyphro", "--print"],
+            capture_output=True,
+            text=True
+        )
+
+        assert result.returncode == 0
+        assert len(result.stdout) > 0
+        assert "ΕΥΘΥΦΡΩΝ" in result.stdout
+
+    def test_extract_work_id_and_alias_produce_same_output(self, cli_command):
+        """Test that work ID and work name alias produce identical output."""
+        # Extract using work ID
+        result_id = subprocess.run(
+            cli_command + ["extract", "tlg0059.tlg001", "--print"],
+            capture_output=True,
+            text=True
+        )
+
+        # Extract using work name alias
+        result_alias = subprocess.run(
+            cli_command + ["extract", "euthyphro", "--print"],
+            capture_output=True,
+            text=True
+        )
+
+        assert result_id.returncode == 0
+        assert result_alias.returncode == 0
+        assert result_id.stdout == result_alias.stdout
