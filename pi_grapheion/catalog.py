@@ -294,13 +294,13 @@ class PerseusCatalog:
 
     def _extract_page_range(self, xml_file: Path) -> str:
         """
-        Extract the Stephanus page range from a TEI XML file.
+        Extract the Stephanus page range or section range from a TEI XML file.
 
         Args:
             xml_file: Path to the TEI XML file
 
         Returns:
-            Page range string (e.g., "2-16", "327-621") or empty string if none found
+            Page range string (e.g., "2-16", "327-621", "1-52") or empty string if none found
         """
         try:
             # TEI namespace
@@ -316,17 +316,27 @@ class PerseusCatalog:
                 namespaces=NS
             )
 
-            if not milestones:
+            # Also find section divs (Isocrates and other authors use these)
+            section_divs = root.xpath(
+                "//tei:div[@type='textpart' and @subtype='section']/@n",
+                namespaces=NS
+            )
+
+            # Combine both types
+            all_markers = milestones + section_divs
+
+            if not all_markers:
                 return ""
 
             # Extract page numbers from Stephanus markers (e.g., "327a" -> 327, "1012b" -> 1012)
+            # or section numbers (e.g., "1", "2", "52")
             pages = set()
-            for marker in milestones:
+            for marker in all_markers:
                 # Skip special markers like "chunk"
                 if not any(c.isdigit() for c in marker):
                     continue
 
-                # Extract numeric part (page number)
+                # Extract numeric part (page number or section number)
                 page_num = ""
                 for char in marker:
                     if char.isdigit():

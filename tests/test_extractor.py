@@ -39,6 +39,23 @@ class TestTextExtractor:
             / "tlg0007.tlg134.perseus-grc2.xml"
         )
 
+    @pytest.fixture
+    def sample_sections_path(self):
+        """Path to sample section-based XML fixture (Isocrates-style)."""
+        return Path(__file__).parent / "fixtures" / "sample_sections.xml"
+
+    @pytest.fixture
+    def trapeziticus_xml_path(self):
+        """Path to actual Isocrates Trapeziticus XML file."""
+        return (
+            Path(__file__).parent.parent
+            / "canonical-greekLit"
+            / "data"
+            / "tlg0010"
+            / "tlg005"
+            / "tlg0010.tlg005.perseus-grc2.xml"
+        )
+
     def test_extract_dialogue_text(self, sample_xml_path):
         """Test 4: Should extract text from <said> elements."""
         from pi_grapheion.parser import TEIParser
@@ -214,3 +231,61 @@ class TestTextExtractor:
         assert len(plutarch_markers) > 0, "Should extract stephpage markers from Plutarch"
         # Plutarch markers are like "1012b", "1012c", "1013a", etc.
         assert any("1012" in marker or "1013" in marker for marker in plutarch_markers[:20])
+
+    def test_extract_section_numbers_from_divs(self, sample_sections_path):
+        """Test extraction of section numbers from <div subtype='section'> elements."""
+        from pi_grapheion.parser import TEIParser
+        from pi_grapheion.extractor import TextExtractor
+
+        parser = TEIParser(sample_sections_path)
+        extractor = TextExtractor(parser)
+
+        text_entries = extractor.get_dialogue_text()
+
+        # Should have 3 entries (one per section)
+        assert len(text_entries) == 3
+
+        # Each entry should have the correct section number
+        assert text_entries[0]["stephanus"] == ["1"]
+        assert text_entries[1]["stephanus"] == ["2"]
+        assert text_entries[2]["stephanus"] == ["3"]
+
+        # Check that text content is extracted
+        assert "ἀγών" in text_entries[0]["text"]
+        assert "χαλεπώτατον" in text_entries[1]["text"]
+        assert "διηγήσομαι" in text_entries[2]["text"]
+
+    def test_extract_from_real_trapeziticus(self, trapeziticus_xml_path):
+        """Test extraction from the actual Isocrates Trapeziticus XML file."""
+        from pi_grapheion.parser import TEIParser
+        from pi_grapheion.extractor import TextExtractor
+
+        if not trapeziticus_xml_path.exists():
+            pytest.skip("Trapeziticus XML file not found")
+
+        parser = TEIParser(trapeziticus_xml_path)
+        extractor = TextExtractor(parser)
+
+        text_entries = extractor.get_dialogue_text()
+
+        # Should have many entries (Trapeziticus has 58 sections)
+        assert len(text_entries) == 58
+
+        # All entries should have required fields
+        for entry in text_entries:
+            assert "speaker" in entry
+            assert "label" in entry
+            assert "text" in entry
+            assert "stephanus" in entry
+
+        # Find entries with section markers
+        entries_with_markers = [e for e in text_entries if e["stephanus"]]
+        assert len(entries_with_markers) == 58, "Should have section markers for all sections"
+
+        # Check that first few section markers are correct
+        assert text_entries[0]["stephanus"] == ["1"]
+        assert text_entries[1]["stephanus"] == ["2"]
+        assert text_entries[2]["stephanus"] == ["3"]
+
+        # Check that text content is extracted from first section
+        assert "ἀγών" in text_entries[0]["text"]

@@ -79,7 +79,10 @@ This file provides guidance to Claude Code when working with this repository.
 .venv/bin/python -m pi_grapheion.cli search "Republic"         # Search by title/author
 ```
 
-**Note**: `list-works` output now includes page ranges (Stephanus numbers) for each work.
+**Note**: `list-works` output now includes page/section ranges for each work:
+- Plato: Stephanus page numbers (e.g., `[2-16]`, `[327-621]`)
+- Plutarch: Stephanus page numbers (e.g., `[1012-1030]`)
+- Isocrates and others: Section numbers (e.g., `[1-58]`)
 
 ### Anthology Extraction (NEW)
 Extract discontinuous passages from one or more works using work name aliases:
@@ -122,9 +125,13 @@ Extract discontinuous passages from one or more works using work name aliases:
 Perseus texts use TEI P5:
 - Namespace: `http://www.tei-c.org/ns/1.0`
 - Dialogue: `<said who="#Speaker">` with `<label>` abbreviations
-- Stephanus: `<milestone n="327a" unit="section"/>`
+- Stephanus pagination (Plato): `<milestone n="327a" unit="section"/>`
+- Stephanus pagination (Plutarch): `<milestone n="1012b" unit="stephpage"/>`
+- Section numbering (Isocrates, others): `<div type="textpart" subtype="section" n="1">`
 - Paragraph breaks: `<milestone ed="P" unit="para"/>`
 - Books: `<div type="textpart" subtype="book" n="1">`
+
+**Note**: The extractor automatically detects both milestone-based pagination (Plato, Plutarch) and div-based section numbering (Isocrates, other authors). Both appear in the `stephanus` field and are formatted identically in output.
 
 ## Development Guidelines
 
@@ -177,10 +184,13 @@ The tool provides helpful error messages:
 
 ## Special Cases
 
-### Stephanus Markers
-- Some markers lack `resp="Stephanus"` - we check only `unit="section"`
-- Markers split at boundaries to ensure correct placement
+### Pagination and Section Markers
+- **Stephanus markers (Plato)**: `<milestone unit="section">` - some lack `resp="Stephanus"` attribute
+- **Stephanus markers (Plutarch)**: `<milestone unit="stephpage">` for Moralia works
+- **Section numbers (Isocrates, others)**: `<div subtype="section">` with numeric `n` attribute
+- Markers split at boundaries to ensure correct placement in output
 - Editorial paragraph breaks preserved via `is_paragraph_start` flag
+- The extractor's `_find_section_number()` method traverses the element tree to detect section divs
 
 ### Accent Removal
 Greek titles/headers in uppercase use Unicode NFD normalization to strip accents (standard epigraphic convention).

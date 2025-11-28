@@ -134,16 +134,25 @@ class TextExtractor:
             # Find which book this <p> element is in
             book_num = self._find_book_number(p)
 
+            # Find which section this <p> element is in
+            section_num = self._find_section_number(p)
+
             # Split this <p> element at milestone boundaries
             segments = self._split_at_milestones(p)
 
             # Add empty speaker/label, p_index, book, and paragraph flag to each segment
             for segment in segments:
+                # If this paragraph is in a section div, add section number to stephanus markers
+                stephanus = segment["stephanus"].copy() if segment["stephanus"] else []
+                if section_num and not stephanus:
+                    # Only add section number if there are no milestone markers
+                    stephanus = [section_num]
+
                 entries.append({
                     "speaker": "",
                     "label": "",
                     "text": segment["text"],
-                    "stephanus": segment["stephanus"],
+                    "stephanus": stephanus,
                     "said_id": p_index,  # Track which <p> this came from
                     "is_paragraph_start": segment.get("is_paragraph_start", False),
                     "book": book_num,  # Track which book this came from
@@ -352,6 +361,30 @@ class TextExtractor:
                 current.get("subtype") == "book"):
                 book_num = current.get("n", "")
                 return book_num
+            # Move to parent
+            current = current.getparent()
+
+        return ""
+
+    def _find_section_number(self, element) -> str:
+        """
+        Find which section number an element belongs to by traversing up the tree.
+
+        Args:
+            element: An lxml Element (either <said> or <p>)
+
+        Returns:
+            Section number as string (e.g., "1", "2"), or empty string if not in a section
+        """
+        # Traverse up the tree to find a parent div with subtype="section"
+        current = element
+        while current is not None:
+            # Check if this is a section div
+            if (current.tag == f"{{{self.NS['tei']}}}div" and
+                current.get("type") == "textpart" and
+                current.get("subtype") == "section"):
+                section_num = current.get("n", "")
+                return section_num
             # Move to parent
             current = current.getparent()
 

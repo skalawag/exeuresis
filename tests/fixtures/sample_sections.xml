@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0">
+    <teiHeader xml:lang="eng">
+        <fileDesc>
+            <titleStmt>
+                <title xml:lang="grc">Τραπεζιτικός</title>
+                <author>Isocrates</author>
+            </titleStmt>
+        </fileDesc>
+        <encodingDesc>
+            <refsDecl n="CTS">
+                <cRefPattern n="section" matchPattern="(\w+)" replacementPattern="#xpath(/tei:TEI/tei:text/tei:body/tei:div/tei:div[@n='$1'])">
+                    <p>This pointer pattern extracts section.</p>
+                </cRefPattern>
+            </refsDecl>
+        </encodingDesc>
+    </teiHeader>
+    <text xml:lang="grc">
+        <body>
+            <div type="edition" n="urn:cts:greekLit:tlg0010.tlg005.perseus-grc2" xml:lang="grc">
+                <div subtype="section" type="textpart" n="1">
+                    <p>ὁ μὲν ἀγών μοι μέγας ἐστίν, ὦ ἄνδρες δικασταί.</p>
+                </div>
+                <div subtype="section" type="textpart" n="2">
+                    <p>ἔστι δʼ, ὦ ἄνδρες δικασταί, πάντων χαλεπώτατον τοιούτων ἀντιδίκων τυχεῖν.</p>
+                </div>
+                <div subtype="section" type="textpart" n="3">
+                    <p>ἐξ ἀρχῆς οὖν ὑμῖν, ὅπως ἂν δύνωμαι, διηγήσομαι τὰ πεπραγμένα.</p>
+                </div>
+            </div>
+        </body>
+    </text>
+</TEI>

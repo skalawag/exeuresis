@@ -199,3 +199,13 @@ class TestPerseusCatalog:
         republic = next((w for w in works if w.work_id == "tlg030"), None)
         assert republic is not None
         assert republic.page_range == "327-621"
+
+    def test_section_numbers_in_works(self, catalog):
+        """Test that works with section-based numbering include section ranges."""
+        works = catalog.list_works("tlg0010")  # Isocrates
+
+        # Find Trapeziticus
+        trapeziticus = next((w for w in works if w.work_id == "tlg005"), None)
+        assert trapeziticus is not None
+        # Trapeziticus has sections 1-58
+        assert trapeziticus.page_range == "1-58"
