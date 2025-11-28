@@ -1,7 +1,7 @@
 """Tests for Stephanus pagination formatting and text wrapping."""
 
 import pytest
-from pi_grapheion.formatter import TextFormatter, OutputStyle
+from exeuresis.formatter import TextFormatter, OutputStyle
 
 
 class TestStephanusFormatting:

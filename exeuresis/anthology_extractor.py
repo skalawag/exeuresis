@@ -4,11 +4,11 @@ from dataclasses import dataclass
 from typing import List, Dict, Optional
 from pathlib import Path
 
-from pi_grapheion.catalog import PerseusCatalog
-from pi_grapheion.parser import TEIParser
-from pi_grapheion.extractor import TextExtractor
-from pi_grapheion.range_filter import RangeFilter
-from pi_grapheion.exceptions import WorkNotFoundError
+from exeuresis.catalog import PerseusCatalog
+from exeuresis.parser import TEIParser
+from exeuresis.extractor import TextExtractor
+from exeuresis.range_filter import RangeFilter
+from exeuresis.exceptions import WorkNotFoundError
 
 
 def parse_range_list(range_str: str) -> List[str]:

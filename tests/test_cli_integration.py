@@ -2,7 +2,7 @@
 
 import pytest
 from pathlib import Path
-from pi_grapheion.cli import main
+from exeuresis.cli import main
 import sys
 
 

@@ -5,19 +5,19 @@ import logging
 import sys
 from pathlib import Path
 
-from pi_grapheion.parser import TEIParser
-from pi_grapheion.extractor import TextExtractor
-from pi_grapheion.formatter import TextFormatter, OutputStyle
-from pi_grapheion.catalog import PerseusCatalog
-from pi_grapheion.range_filter import RangeFilter
-from pi_grapheion.work_resolver import WorkResolver
-from pi_grapheion.anthology_extractor import (
+from exeuresis.parser import TEIParser
+from exeuresis.extractor import TextExtractor
+from exeuresis.formatter import TextFormatter, OutputStyle
+from exeuresis.catalog import PerseusCatalog
+from exeuresis.range_filter import RangeFilter
+from exeuresis.work_resolver import WorkResolver
+from exeuresis.anthology_extractor import (
     AnthologyExtractor,
     PassageSpec,
     parse_range_list,
 )
-from pi_grapheion.anthology_formatter import AnthologyFormatter
-from pi_grapheion.exceptions import (
+from exeuresis.anthology_formatter import AnthologyFormatter
+from exeuresis.exceptions import (
     WorkNotFoundError,
     InvalidTEIStructureError,
     EmptyExtractionError,

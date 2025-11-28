@@ -535,7 +535,7 @@ class TextFormatter:
         if self.parser:
             author_id = self.parser.get_author_id()
             if author_id and author_id != "tlg0059":
-                from pi_grapheion.exceptions import InvalidStyleError
+                from exeuresis.exceptions import InvalidStyleError
                 raise InvalidStyleError(
                     "S (Stephanus layout)",
                     "This style is only valid for Plato's works (tlg0059). "

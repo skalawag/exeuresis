@@ -2,8 +2,8 @@
 
 import pytest
 from pathlib import Path
-from pi_grapheion.work_resolver import WorkResolver
-from pi_grapheion.exceptions import WorkNotFoundError
+from exeuresis.work_resolver import WorkResolver
+from exeuresis.exceptions import WorkNotFoundError
 
 
 class TestWorkResolver:

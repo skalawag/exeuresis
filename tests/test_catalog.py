@@ -2,8 +2,8 @@
 
 import pytest
 from pathlib import Path
-from pi_grapheion.catalog import PerseusCatalog, PerseusAuthor, PerseusWork
-from pi_grapheion.exceptions import WorkNotFoundError
+from exeuresis.catalog import PerseusCatalog, PerseusAuthor, PerseusWork
+from exeuresis.exceptions import WorkNotFoundError
 
 
 class TestPerseusCatalog:

@@ -1,7 +1,7 @@
 """Tests for custom exceptions."""
 
 import pytest
-from pi_grapheion.exceptions import InvalidStephanusRangeError
+from exeuresis.exceptions import InvalidStephanusRangeError
 
 
 def test_invalid_stephanus_range_error_basic():

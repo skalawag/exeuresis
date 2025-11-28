@@ -1,4 +1,4 @@
-# π-grapheion
+# exeuresis
 
 A Python tool for extracting and reformatting ancient Greek texts from the Perseus Digital Library.
 
@@ -25,7 +25,7 @@ This tool extracts text from TEI XML files from the Perseus Digital Library and 
 ```bash
 # Clone this repository
 git clone <repository-url>
-cd pi-grapheion
+cd exeuresis
 
 # Clone the Perseus Digital Library corpus (MUST be at project root)
 git clone https://github.com/PerseusDL/canonical-greekLit.git
@@ -41,7 +41,7 @@ pip install -e ".[dev]"
 ```
 
 **Important**:
-- The `canonical-greekLit` directory **must** be located at the project root (same level as `pi_grapheion/`)
+- The `canonical-greekLit` directory **must** be located at the project root (same level as `exeuresis/`)
 - It contains ~99 authors and 818 works (several hundred MB of data)
 - The tool expects to find it at `./canonical-greekLit/data/`
 
@@ -49,16 +49,16 @@ pip install -e ".[dev]"
 
 ```bash
 # Browse the catalog
-python -m pi_grapheion.cli list-authors
-python -m pi_grapheion.cli search "Plato"
-python -m pi_grapheion.cli list-works tlg0059
+python -m exeuresis.cli list-authors
+python -m exeuresis.cli search "Plato"
+python -m exeuresis.cli list-works tlg0059
 
 # Extract text by work name or ID
-python -m pi_grapheion.cli extract euthyphro --style A
-python -m pi_grapheion.cli extract tlg0059.tlg001 --style A
+python -m exeuresis.cli extract euthyphro --style A
+python -m exeuresis.cli extract tlg0059.tlg001 --style A
 
 # Extract specific range
-python -m pi_grapheion.cli extract euthyphro 2a-5e --print
+python -m exeuresis.cli extract euthyphro 2a-5e --print
 ```
 
 ## Usage
@@ -68,7 +68,7 @@ python -m pi_grapheion.cli extract euthyphro 2a-5e --print
 #### List Authors
 ```bash
 # List all 99 authors
-python -m pi_grapheion.cli list-authors
+python -m exeuresis.cli list-authors
 
 # Output format: TLG ID, English name, Greek name
 # tlg0059: Plato (Πλάτων)
@@ -77,9 +77,9 @@ python -m pi_grapheion.cli list-authors
 #### Search Works
 ```bash
 # Search by title or author name (case-insensitive)
-python -m pi_grapheion.cli search "Euthyphro"
-python -m pi_grapheion.cli search "Plato"
-python -m pi_grapheion.cli search "Φαίδων"  # Greek text supported
+python -m exeuresis.cli search "Euthyphro"
+python -m exeuresis.cli search "Plato"
+python -m exeuresis.cli search "Φαίδων"  # Greek text supported
 
 # Results show: Author TLG ID, Work ID, Title
 ```
@@ -87,14 +87,14 @@ python -m pi_grapheion.cli search "Φαίδων"  # Greek text supported
 #### List Works
 ```bash
 # List works by author name (case-insensitive)
-python -m pi_grapheion.cli list-works Plato
-python -m pi_grapheion.cli list-works plato  # Same result
+python -m exeuresis.cli list-works Plato
+python -m exeuresis.cli list-works plato  # Same result
 
 # Or by TLG ID
-python -m pi_grapheion.cli list-works tlg0059  # Plato's 36 works
+python -m exeuresis.cli list-works tlg0059  # Plato's 36 works
 
 # List all 818 works from all authors
-python -m pi_grapheion.cli list-works --all
+python -m exeuresis.cli list-works --all
 ```
 
 **Output includes**:
@@ -107,29 +107,29 @@ python -m pi_grapheion.cli list-works --all
 #### By Work ID or Work Name (Recommended)
 ```bash
 # By TLG work ID (format: tlg####.tlg###)
-python -m pi_grapheion.cli extract tlg0059.tlg001  # Plato's Euthyphro
-python -m pi_grapheion.cli extract tlg0059.tlg030  # Plato's Republic
+python -m exeuresis.cli extract tlg0059.tlg001  # Plato's Euthyphro
+python -m exeuresis.cli extract tlg0059.tlg030  # Plato's Republic
 
 # By work name alias (case-insensitive)
-python -m pi_grapheion.cli extract euthyphro
-python -m pi_grapheion.cli extract republic
+python -m exeuresis.cli extract euthyphro
+python -m exeuresis.cli extract republic
 
 # Specify output style
-python -m pi_grapheion.cli extract euthyphro --style A
-python -m pi_grapheion.cli extract euthyphro --style E
+python -m exeuresis.cli extract euthyphro --style A
+python -m exeuresis.cli extract euthyphro --style E
 
 # Specify output file
-python -m pi_grapheion.cli extract euthyphro --output euthyphro.txt
+python -m exeuresis.cli extract euthyphro --output euthyphro.txt
 
 # Print to console (use -o - or --print)
-python -m pi_grapheion.cli extract euthyphro -o -
-python -m pi_grapheion.cli extract euthyphro --print
+python -m exeuresis.cli extract euthyphro -o -
+python -m exeuresis.cli extract euthyphro --print
 ```
 
 #### By File Path
 ```bash
 # Backward compatible with direct file paths
-python -m pi_grapheion.cli extract canonical-greekLit/data/tlg0059/tlg001/tlg0059.tlg001.perseus-grc1.xml
+python -m exeuresis.cli extract canonical-greekLit/data/tlg0059/tlg001/tlg0059.tlg001.perseus-grc1.xml
 ```
 
 #### Work Name Aliases
@@ -142,7 +142,7 @@ Work name aliases work in **all** extract commands (single extraction, ranges, a
 - Case-insensitive matching
 
 **Custom Aliases:**
-Create `~/.pi-grapheion/aliases.yaml` or `.pi-grapheion/aliases.yaml`:
+Create `~/.exeuresis/aliases.yaml` or `.exeuresis/aliases.yaml`:
 ```yaml
 aliases:
   euth: tlg0059.tlg001
@@ -150,7 +150,7 @@ aliases:
   phaedo: tlg0059.tlg004
 ```
 
-Project config (`.pi-grapheion/`) overrides user config (`~/.pi-grapheion/`).
+Project config (`.exeuresis/`) overrides user config (`~/.exeuresis/`).
 
 #### Extracting Specific Ranges
 
@@ -158,20 +158,20 @@ Extract specific Stephanus passages instead of entire works:
 
 ```bash
 # Single section (work ID or alias)
-python -m pi_grapheion.cli extract tlg0059.tlg001 2a
-python -m pi_grapheion.cli extract euthyphro 2a
+python -m exeuresis.cli extract tlg0059.tlg001 2a
+python -m exeuresis.cli extract euthyphro 2a
 
 # Single page (all sections)
-python -m pi_grapheion.cli extract euthyphro 2
+python -m exeuresis.cli extract euthyphro 2
 
 # Section range (inclusive)
-python -m pi_grapheion.cli extract euthyphro 2a-3e
+python -m exeuresis.cli extract euthyphro 2a-3e
 
 # Page range
-python -m pi_grapheion.cli extract republic 2-5
+python -m exeuresis.cli extract republic 2-5
 
 # Combine with output styles
-python -m pi_grapheion.cli extract euthyphro 2a-3e --style S --print
+python -m exeuresis.cli extract euthyphro 2a-3e --style S --print
 ```
 
 **Range Syntax:**
@@ -189,16 +189,16 @@ Extract multiple non-contiguous passages from one or more works using work name 
 
 ```bash
 # Single work, multiple discontinuous ranges
-python -m pi_grapheion.cli extract euthyphro --passages 5a,7b-7c,10a
+python -m exeuresis.cli extract euthyphro --passages 5a,7b-7c,10a
 
 # Multiple works with different passages
-python -m pi_grapheion.cli extract euthyphro --passages 5a republic --passages 354b
+python -m exeuresis.cli extract euthyphro --passages 5a republic --passages 354b
 
 # Using work IDs instead of aliases
-python -m pi_grapheion.cli extract tlg0059.tlg001 --passages 2a,3b tlg0059.tlg030 --passages 327a
+python -m exeuresis.cli extract tlg0059.tlg001 --passages 2a,3b tlg0059.tlg030 --passages 327a
 
 # With output options
-python -m pi_grapheion.cli extract euthyphro --passages 5a,7b-7c --style A --print
+python -m exeuresis.cli extract euthyphro --passages 5a,7b-7c --style A --print
 ```
 
 **Anthology Features:**
@@ -222,7 +222,7 @@ python -m pi_grapheion.cli extract euthyphro --passages 5a,7b-7c --style A --pri
 
 #### **Style A: Full Modern Edition** (default)
 ```bash
-python -m pi_grapheion.cli extract tlg0059.tlg001 --style A
+python -m exeuresis.cli extract tlg0059.tlg001 --style A
 ```
 Features:
 - All punctuation preserved
@@ -246,25 +246,25 @@ Example output:
 
 #### **Style B: Minimal Punctuation**
 ```bash
-python -m pi_grapheion.cli extract tlg0059.tlg001 --style B
+python -m exeuresis.cli extract tlg0059.tlg001 --style B
 ```
 Preserves only periods, question marks (;), and colons (·). Removes commas.
 
 #### **Style C: No Punctuation**
 ```bash
-python -m pi_grapheion.cli extract tlg0059.tlg001 --style C
+python -m exeuresis.cli extract tlg0059.tlg001 --style C
 ```
 Removes all punctuation but preserves speaker labels, word boundaries, and Stephanus markers.
 
 #### **Style D: No Punctuation, No Labels**
 ```bash
-python -m pi_grapheion.cli extract tlg0059.tlg001 --style D
+python -m exeuresis.cli extract tlg0059.tlg001 --style D
 ```
 Continuous text with Stephanus markers but no speaker labels or punctuation.
 
 #### **Style E: Scriptio Continua**
 ```bash
-python -m pi_grapheion.cli extract tlg0059.tlg001 --style E
+python -m exeuresis.cli extract tlg0059.tlg001 --style E
 ```
 Ancient Greek as originally written:
 - ALL UPPERCASE
@@ -280,7 +280,7 @@ Example output:
 
 #### **Style S: Stephanus Layout** (Plato only)
 ```bash
-python -m pi_grapheion.cli extract tlg0059.tlg001 --style S
+python -m exeuresis.cli extract tlg0059.tlg001 --style S
 ```
 Approximates the 1578 Stephanus edition:
 - 40-character narrow columns (Renaissance two-column format)
@@ -304,23 +304,23 @@ Example output:
 ### Browse and Extract Workflow
 ```bash
 # 1. Find Plato's works
-python -m pi_grapheion.cli search "Plato"
+python -m exeuresis.cli search "Plato"
 
 # 2. List all of Plato's works
-python -m pi_grapheion.cli list-works tlg0059
+python -m exeuresis.cli list-works tlg0059
 
 # 3. Extract the Euthyphro in different styles
-python -m pi_grapheion.cli extract tlg0059.tlg001 --style A --output euthyphro_modern.txt
-python -m pi_grapheion.cli extract tlg0059.tlg001 --style E --output euthyphro_ancient.txt
+python -m exeuresis.cli extract tlg0059.tlg001 --style A --output euthyphro_modern.txt
+python -m exeuresis.cli extract tlg0059.tlg001 --style E --output euthyphro_ancient.txt
 
 # 4. Preview on console
-python -m pi_grapheion.cli extract tlg0059.tlg001 --print | less
+python -m exeuresis.cli extract tlg0059.tlg001 --print | less
 ```
 
 ### Multi-Book Works
 ```bash
 # Plato's Republic (10 books) - automatic book headers
-python -m pi_grapheion.cli extract tlg0059.tlg030 --style A
+python -m exeuresis.cli extract tlg0059.tlg030 --style A
 
 # Output includes:
 # ΠΟΛΙΤΕΙΑ
@@ -335,7 +335,7 @@ python -m pi_grapheion.cli extract tlg0059.tlg030 --style A
 ```bash
 # Extract all of Plato's dialogues in Style A
 for work in tlg001 tlg002 tlg003 tlg004 tlg005; do
-  python -m pi_grapheion.cli extract tlg0059.$work --style A
+  python -m exeuresis.cli extract tlg0059.$work --style A
 done
 ```
 
@@ -344,8 +344,8 @@ done
 ### Project Structure
 
 ```
-pi-grapheion/
-├── pi_grapheion/
+exeuresis/
+├── exeuresis/
 │   ├── __init__.py
 │   ├── parser.py               # TEI XML parsing with structure validation
 │   ├── extractor.py            # Text extraction from parsed XML
@@ -417,7 +417,7 @@ XML File → TEIParser → TextExtractor → TextFormatter → Output
 pytest
 
 # Run with coverage (current: 77%)
-pytest --cov=pi_grapheion --cov-report=term-missing
+pytest --cov=exeuresis --cov-report=term-missing
 
 # Run specific test suite
 pytest tests/test_catalog.py -v
@@ -448,28 +448,28 @@ The tool provides clear, actionable error messages:
 
 ```bash
 # Invalid work ID format
-$ python -m pi_grapheion.cli extract tlg0059
+$ python -m exeuresis.cli extract tlg0059
 Error: Work not found: tlg0059
 Work ID must be in format 'tlg####.tlg###' (e.g., tlg0059.tlg001)
 
 # Non-existent work
-$ python -m pi_grapheion.cli extract tlg0059.tlg999
+$ python -m exeuresis.cli extract tlg0059.tlg999
 Error: Work not found: tlg0059.tlg999
 Work 'tlg999' not found for author Plato (tlg0059). Available works: 36 total.
 Use 'list-works tlg0059' to see all works by this author.
 
 # Invalid style for author
-$ python -m pi_grapheion.cli extract tlg0003.tlg001 --style S
+$ python -m exeuresis.cli extract tlg0003.tlg001 --style S
 Error: Cannot use style 'S (Stephanus layout)': This style is only valid for
 Plato's works (tlg0059). Stephanus pagination refers to the 1578 edition of
 Plato by Henri Estienne (Stephanus).
 
 # Missing TEI structure
-$ python -m pi_grapheion.cli extract broken.xml
+$ python -m exeuresis.cli extract broken.xml
 Error: Invalid TEI structure in broken.xml: missing required element 'tei:body'
 
 # Empty file
-$ python -m pi_grapheion.cli extract empty.xml
+$ python -m exeuresis.cli extract empty.xml
 Error: No text extracted from empty.xml: No text elements found in document
 ```
 
@@ -509,7 +509,7 @@ Perseus TLG format: `tlg####.tlg###`
 ### Perseus corpus not found
 ```bash
 # Make sure canonical-greekLit is cloned in the project directory
-cd pi-grapheion
+cd exeuresis
 git clone https://github.com/PerseusDL/canonical-greekLit.git
 ```
 

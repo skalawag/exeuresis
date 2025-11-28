@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import List, Dict, Optional
 from lxml import etree
 
-from pi_grapheion.exceptions import WorkNotFoundError
+from exeuresis.exceptions import WorkNotFoundError
 
 logger = logging.getLogger(__name__)
 

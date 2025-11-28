@@ -3,10 +3,10 @@ requires = ["setuptools>=65.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["pi_grapheion"]
+packages = ["exeuresis"]
 
 [project]
-name = "pi-grapheion"
+name = "exeuresis"
 version = "0.1.0"
 description = "Extract and reformat Greek texts from TEI XML files"
 readme = "README.md"
@@ -28,14 +28,14 @@ dev = [
 ]
 
 [project.scripts]
-pi-grapheion = "pi_grapheion.cli:main"
+exeuresis = "exeuresis.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-v --cov=pi_grapheion --cov-report=term-missing"
+addopts = "-v --cov=exeuresis --cov-report=term-missing"
 
 [tool.black]
 line-length = 88

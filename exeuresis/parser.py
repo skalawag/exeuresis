@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List, Dict
 from lxml import etree
 
-from pi_grapheion.exceptions import InvalidTEIStructureError
+from exeuresis.exceptions import InvalidTEIStructureError
 
 
 class TEIParser:

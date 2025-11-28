@@ -2,10 +2,10 @@
 
 import pytest
 from pathlib import Path
-from pi_grapheion.parser import TEIParser
-from pi_grapheion.extractor import TextExtractor
-from pi_grapheion.formatter import TextFormatter, OutputStyle
-from pi_grapheion.exceptions import InvalidStyleError
+from exeuresis.parser import TEIParser
+from exeuresis.extractor import TextExtractor
+from exeuresis.formatter import TextFormatter, OutputStyle
+from exeuresis.exceptions import InvalidStyleError
 
 
 class TestStyleValidation:

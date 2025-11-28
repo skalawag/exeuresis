@@ -3,8 +3,8 @@
 import pytest
 from pathlib import Path
 
-# from pi_grapheion.extractor import TextExtractor
-# from pi_grapheion.parser import TEIParser
+# from exeuresis.extractor import TextExtractor
+# from exeuresis.parser import TEIParser
 
 
 class TestTextExtractor:
@@ -58,8 +58,8 @@ class TestTextExtractor:
 
     def test_extract_dialogue_text(self, sample_xml_path):
         """Test 4: Should extract text from <said> elements."""
-        from pi_grapheion.parser import TEIParser
-        from pi_grapheion.extractor import TextExtractor
+        from exeuresis.parser import TEIParser
+        from exeuresis.extractor import TextExtractor
 
         parser = TEIParser(sample_xml_path)
         extractor = TextExtractor(parser)
@@ -79,8 +79,8 @@ class TestTextExtractor:
 
     def test_extract_speaker_labels(self, sample_xml_path):
         """Test 5: Should extract speaker labels (ΕΥΘ., ΣΩ.)."""
-        from pi_grapheion.parser import TEIParser
-        from pi_grapheion.extractor import TextExtractor
+        from exeuresis.parser import TEIParser
+        from exeuresis.extractor import TextExtractor
 
         parser = TEIParser(sample_xml_path)
         extractor = TextExtractor(parser)
@@ -93,8 +93,8 @@ class TestTextExtractor:
 
     def test_extract_stephanus_numbers(self, sample_xml_path):
         """Test 6: Should extract Stephanus pagination markers."""
-        from pi_grapheion.parser import TEIParser
-        from pi_grapheion.extractor import TextExtractor
+        from exeuresis.parser import TEIParser
+        from exeuresis.extractor import TextExtractor
 
         parser = TEIParser(sample_xml_path)
         extractor = TextExtractor(parser)
@@ -111,8 +111,8 @@ class TestTextExtractor:
         """Test 7: Should handle editorial markup like <del> tags."""
         # We'll create a fixture with <del> tags for this test
         # For now, test basic text extraction without errors
-        from pi_grapheion.parser import TEIParser
-        from pi_grapheion.extractor import TextExtractor
+        from exeuresis.parser import TEIParser
+        from exeuresis.extractor import TextExtractor
 
         parser = TEIParser(sample_xml_path)
         extractor = TextExtractor(parser)
@@ -123,8 +123,8 @@ class TestTextExtractor:
 
     def test_maintain_dialogue_order(self, sample_xml_path):
         """Test that dialogue text is extracted in document order."""
-        from pi_grapheion.parser import TEIParser
-        from pi_grapheion.extractor import TextExtractor
+        from exeuresis.parser import TEIParser
+        from exeuresis.extractor import TextExtractor
 
         parser = TEIParser(sample_xml_path)
         extractor = TextExtractor(parser)
@@ -137,8 +137,8 @@ class TestTextExtractor:
 
     def test_extract_from_real_euthyphro(self, euthyphro_xml_path):
         """Test extraction from the actual Euthyphro XML file."""
-        from pi_grapheion.parser import TEIParser
-        from pi_grapheion.extractor import TextExtractor
+        from exeuresis.parser import TEIParser
+        from exeuresis.extractor import TextExtractor
 
         if not euthyphro_xml_path.exists():
             pytest.skip("Euthyphro XML file not found")
@@ -160,9 +160,9 @@ class TestTextExtractor:
 
     def test_extract_from_empty_file_raises_error(self):
         """Test that extractor raises EmptyExtractionError for file with no extractable text."""
-        from pi_grapheion.parser import TEIParser
-        from pi_grapheion.extractor import TextExtractor
-        from pi_grapheion.exceptions import EmptyExtractionError
+        from exeuresis.parser import TEIParser
+        from exeuresis.extractor import TextExtractor
+        from exeuresis.exceptions import EmptyExtractionError
 
         empty_xml = Path(__file__).parent / "fixtures" / "invalid" / "empty_text.xml"
 
@@ -177,8 +177,8 @@ class TestTextExtractor:
 
     def test_extract_plutarch_stephpage_markers(self, plutarch_xml_path):
         """Test extraction of Plutarch texts with stephpage pagination markers."""
-        from pi_grapheion.parser import TEIParser
-        from pi_grapheion.extractor import TextExtractor
+        from exeuresis.parser import TEIParser
+        from exeuresis.extractor import TextExtractor
 
         if not plutarch_xml_path.exists():
             pytest.skip("Plutarch XML file not found")
@@ -208,8 +208,8 @@ class TestTextExtractor:
 
     def test_stephanus_marker_types_support(self, euthyphro_xml_path, plutarch_xml_path):
         """Test that both unit='section' (Plato) and unit='stephpage' (Plutarch) are supported."""
-        from pi_grapheion.parser import TEIParser
-        from pi_grapheion.extractor import TextExtractor
+        from exeuresis.parser import TEIParser
+        from exeuresis.extractor import TextExtractor
 
         if not euthyphro_xml_path.exists() or not plutarch_xml_path.exists():
             pytest.skip("Required XML files not found")
@@ -234,8 +234,8 @@ class TestTextExtractor:
 
     def test_extract_section_numbers_from_divs(self, sample_sections_path):
         """Test extraction of section numbers from <div subtype='section'> elements."""
-        from pi_grapheion.parser import TEIParser
-        from pi_grapheion.extractor import TextExtractor
+        from exeuresis.parser import TEIParser
+        from exeuresis.extractor import TextExtractor
 
         parser = TEIParser(sample_sections_path)
         extractor = TextExtractor(parser)
@@ -257,8 +257,8 @@ class TestTextExtractor:
 
     def test_extract_from_real_trapeziticus(self, trapeziticus_xml_path):
         """Test extraction from the actual Isocrates Trapeziticus XML file."""
-        from pi_grapheion.parser import TEIParser
-        from pi_grapheion.extractor import TextExtractor
+        from exeuresis.parser import TEIParser
+        from exeuresis.extractor import TextExtractor
 
         if not trapeziticus_xml_path.exists():
             pytest.skip("Trapeziticus XML file not found")

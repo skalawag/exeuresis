@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List, Dict
 
-from pi_grapheion.exceptions import InvalidStephanusRangeError
+from exeuresis.exceptions import InvalidStephanusRangeError
 
 
 class RangeType(Enum):

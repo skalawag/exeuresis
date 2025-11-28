@@ -2,8 +2,8 @@
 
 import pytest
 from pathlib import Path
-from pi_grapheion.anthology_extractor import AnthologyExtractor, PassageSpec, AnthologyBlock
-from pi_grapheion.exceptions import WorkNotFoundError
+from exeuresis.anthology_extractor import AnthologyExtractor, PassageSpec, AnthologyBlock
+from exeuresis.exceptions import WorkNotFoundError
 
 
 class TestAnthologyExtractor:

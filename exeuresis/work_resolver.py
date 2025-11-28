@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import Dict, Optional
 import yaml
 
-from pi_grapheion.catalog import PerseusCatalog
-from pi_grapheion.exceptions import WorkNotFoundError
+from exeuresis.catalog import PerseusCatalog
+from exeuresis.exceptions import WorkNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +25,8 @@ class WorkResolver:
 
         Args:
             config_path: Single config file (for testing)
-            user_config_path: User config (~/.pi-grapheion/aliases.yaml)
-            project_config_path: Project config (.pi-grapheion/aliases.yaml)
+            user_config_path: User config (~/.exeuresis/aliases.yaml)
+            project_config_path: Project config (.exeuresis/aliases.yaml)
         """
         self.catalog = PerseusCatalog()
         self.aliases: Dict[str, str] = {}
@@ -41,16 +41,16 @@ class WorkResolver:
             # Load user config first
             if user_config_path:
                 self._load_config_file(user_config_path)
-            elif Path.home().joinpath(".pi-grapheion", "aliases.yaml").exists():
+            elif Path.home().joinpath(".exeuresis", "aliases.yaml").exists():
                 self._load_config_file(
-                    Path.home() / ".pi-grapheion" / "aliases.yaml"
+                    Path.home() / ".exeuresis" / "aliases.yaml"
                 )
 
             # Load project config second (overrides user)
             if project_config_path:
                 self._load_config_file(project_config_path)
-            elif Path(".pi-grapheion/aliases.yaml").exists():
-                self._load_config_file(Path(".pi-grapheion/aliases.yaml"))
+            elif Path(".exeuresis/aliases.yaml").exists():
+                self._load_config_file(Path(".exeuresis/aliases.yaml"))
 
     def resolve(self, name: str) -> str:
         """

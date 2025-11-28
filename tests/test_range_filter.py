@@ -1,8 +1,8 @@
 """Tests for Stephanus range filtering."""
 
 import pytest
-from pi_grapheion.range_filter import RangeSpec, RangeType, StephanusRangeParser, StephanusComparator, RangeFilter
-from pi_grapheion.exceptions import InvalidStephanusRangeError
+from exeuresis.range_filter import RangeSpec, RangeType, StephanusRangeParser, StephanusComparator, RangeFilter
+from exeuresis.exceptions import InvalidStephanusRangeError
 
 
 def test_range_spec_single_section():

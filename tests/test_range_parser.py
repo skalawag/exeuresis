@@ -1,7 +1,7 @@
 """Tests for range list parsing."""
 
 import pytest
-from pi_grapheion.anthology_extractor import parse_range_list
+from exeuresis.anthology_extractor import parse_range_list
 
 
 def test_parse_single_range():

@@ -5,7 +5,7 @@ from pathlib import Path
 from lxml import etree
 
 # We'll import this once we create it
-# from pi_grapheion.parser import TEIParser
+# from exeuresis.parser import TEIParser
 
 
 class TestTEIParser:
@@ -31,7 +31,7 @@ class TestTEIParser:
     def test_parse_valid_xml(self, sample_xml_path):
         """Test 1: Should successfully parse a valid TEI XML file."""
         # This test will fail until we implement TEIParser
-        from pi_grapheion.parser import TEIParser
+        from exeuresis.parser import TEIParser
 
         parser = TEIParser(sample_xml_path)
         assert parser is not None
@@ -40,7 +40,7 @@ class TestTEIParser:
 
     def test_parse_validates_xml_structure(self, sample_xml_path):
         """Test that parser validates basic TEI structure."""
-        from pi_grapheion.parser import TEIParser
+        from exeuresis.parser import TEIParser
 
         parser = TEIParser(sample_xml_path)
         # Should have TEI root element
@@ -48,14 +48,14 @@ class TestTEIParser:
 
     def test_parse_invalid_file_raises_error(self):
         """Test that parser raises error for non-existent file."""
-        from pi_grapheion.parser import TEIParser
+        from exeuresis.parser import TEIParser
 
         with pytest.raises(FileNotFoundError):
             TEIParser(Path("/nonexistent/file.xml"))
 
     def test_extract_speakers(self, sample_xml_path):
         """Test 2: Should extract speaker names from header."""
-        from pi_grapheion.parser import TEIParser
+        from exeuresis.parser import TEIParser
 
         parser = TEIParser(sample_xml_path)
         speakers = parser.get_speakers()
@@ -66,7 +66,7 @@ class TestTEIParser:
 
     def test_extract_text_divisions(self, sample_xml_path):
         """Test 3: Should extract text divisions with their section numbers."""
-        from pi_grapheion.parser import TEIParser
+        from exeuresis.parser import TEIParser
 
         parser = TEIParser(sample_xml_path)
         divisions = parser.get_divisions()
@@ -79,8 +79,8 @@ class TestTEIParser:
 
     def test_parse_missing_text_element_raises_error(self):
         """Test that parser raises InvalidTEIStructureError for missing <text> element."""
-        from pi_grapheion.parser import TEIParser
-        from pi_grapheion.exceptions import InvalidTEIStructureError
+        from exeuresis.parser import TEIParser
+        from exeuresis.exceptions import InvalidTEIStructureError
 
         invalid_xml = Path(__file__).parent / "fixtures" / "invalid" / "missing_text_element.xml"
 
@@ -92,8 +92,8 @@ class TestTEIParser:
 
     def test_parse_missing_body_element_raises_error(self):
         """Test that parser raises InvalidTEIStructureError for missing <body> element."""
-        from pi_grapheion.parser import TEIParser
-        from pi_grapheion.exceptions import InvalidTEIStructureError
+        from exeuresis.parser import TEIParser
+        from exeuresis.exceptions import InvalidTEIStructureError
 
         invalid_xml = Path(__file__).parent / "fixtures" / "invalid" / "missing_body_element.xml"
 

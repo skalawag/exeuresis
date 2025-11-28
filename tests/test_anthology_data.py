@@ -1,7 +1,7 @@
 """Tests for anthology data structures."""
 
 import pytest
-from pi_grapheion.anthology_extractor import PassageSpec, AnthologyBlock
+from exeuresis.anthology_extractor import PassageSpec, AnthologyBlock
 
 
 def test_passage_spec_creation():

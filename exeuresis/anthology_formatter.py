@@ -2,9 +2,9 @@
 
 from typing import List
 
-from pi_grapheion.anthology_extractor import AnthologyBlock
-from pi_grapheion.formatter import OutputStyle, TextFormatter
-from pi_grapheion.exceptions import InvalidStyleError
+from exeuresis.anthology_extractor import AnthologyBlock
+from exeuresis.formatter import OutputStyle, TextFormatter
+from exeuresis.exceptions import InvalidStyleError
 
 
 class AnthologyFormatter:

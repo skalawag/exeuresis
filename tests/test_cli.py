@@ -12,7 +12,7 @@ class TestCLIIntegration:
     @pytest.fixture
     def cli_command(self):
         """Base CLI command."""
-        return [sys.executable, "-m", "pi_grapheion.cli"]
+        return [sys.executable, "-m", "exeuresis.cli"]
 
     @pytest.fixture
     def euthyphro_xml(self):
