@@ -13,8 +13,12 @@ This file provides guidance to Claude Code when working with this repository.
 .venv/bin/python -m pi_grapheion.cli list-authors
 .venv/bin/python -m pi_grapheion.cli search "Plato"
 
-# Extract text by work ID
+# Extract text by work name or ID
+.venv/bin/python -m pi_grapheion.cli extract euthyphro --style A
 .venv/bin/python -m pi_grapheion.cli extract tlg0059.tlg001 --style A
+
+# Extract specific range
+.venv/bin/python -m pi_grapheion.cli extract euthyphro 2a-5e --print
 
 # Run tests
 .venv/bin/python -m pytest tests/ -v
@@ -141,13 +145,19 @@ Perseus texts use TEI P5:
 
 ## Common Tasks
 
-### Extract by Work ID (recommended)
+### Extract by Work Name or ID (recommended)
 ```bash
 # 1. Search for work
 .venv/bin/python -m pi_grapheion.cli search "Phaedo"
 
-# 2. Extract by ID (easier than typing full path)
+# 2. Extract by work name alias (case-insensitive)
+.venv/bin/python -m pi_grapheion.cli extract phaedo --style A
+
+# 3. Or extract by TLG work ID
 .venv/bin/python -m pi_grapheion.cli extract tlg0059.tlg004 --style A
+
+# 4. Extract specific range with alias
+.venv/bin/python -m pi_grapheion.cli extract phaedo 59a-60b --print
 ```
 
 ### Extract by File Path (backward compatible)

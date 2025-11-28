@@ -18,7 +18,7 @@ This tool extracts text from TEI XML files from the Perseus Digital Library and 
 - **Work name aliases** - Use "euthyphro" instead of "tlg0059.tlg001" with custom alias support
 - **Comprehensive error handling** - Clear, actionable error messages
 - **Command-line interface** - Intuitive subcommands for all operations
-- **Test coverage: 77%** - 135 tests with TDD methodology
+- **Test coverage: 77%** - 139 tests with TDD methodology
 
 ## Installation
 
@@ -53,11 +53,12 @@ python -m pi_grapheion.cli list-authors
 python -m pi_grapheion.cli search "Plato"
 python -m pi_grapheion.cli list-works tlg0059
 
-# Extract text by work ID (recommended)
+# Extract text by work name or ID
+python -m pi_grapheion.cli extract euthyphro --style A
 python -m pi_grapheion.cli extract tlg0059.tlg001 --style A
 
-# Or by file path
-python -m pi_grapheion.cli extract canonical-greekLit/data/tlg0059/tlg001/tlg0059.tlg001.perseus-grc1.xml
+# Extract specific range
+python -m pi_grapheion.cli extract euthyphro 2a-5e --print
 ```
 
 ## Usage
@@ -94,21 +95,26 @@ python -m pi_grapheion.cli list-works --all
 
 ### Extract Text
 
-#### By Work ID (Recommended)
+#### By Work ID or Work Name (Recommended)
 ```bash
-# Format: tlg####.tlg### (author.work)
+# By TLG work ID (format: tlg####.tlg###)
 python -m pi_grapheion.cli extract tlg0059.tlg001  # Plato's Euthyphro
 python -m pi_grapheion.cli extract tlg0059.tlg030  # Plato's Republic
 
+# By work name alias (case-insensitive)
+python -m pi_grapheion.cli extract euthyphro
+python -m pi_grapheion.cli extract republic
+
 # Specify output style
-python -m pi_grapheion.cli extract tlg0059.tlg001 --style A
-python -m pi_grapheion.cli extract tlg0059.tlg001 --style E
+python -m pi_grapheion.cli extract euthyphro --style A
+python -m pi_grapheion.cli extract euthyphro --style E
 
 # Specify output file
-python -m pi_grapheion.cli extract tlg0059.tlg001 --output euthyphro.txt
+python -m pi_grapheion.cli extract euthyphro --output euthyphro.txt
 
-# Print to console
-python -m pi_grapheion.cli extract tlg0059.tlg001 --print
+# Print to console (use -o - or --print)
+python -m pi_grapheion.cli extract euthyphro -o -
+python -m pi_grapheion.cli extract euthyphro --print
 ```
 
 #### By File Path
@@ -117,25 +123,46 @@ python -m pi_grapheion.cli extract tlg0059.tlg001 --print
 python -m pi_grapheion.cli extract canonical-greekLit/data/tlg0059/tlg001/tlg0059.tlg001.perseus-grc1.xml
 ```
 
+#### Work Name Aliases
+
+Work name aliases work in **all** extract commands (single extraction, ranges, and anthology mode):
+
+**Automatic Aliases:**
+- English work titles: `euthyphro`, `republic`, `phaedo`, `symposium`, etc.
+- Greek work titles: `ευθυφρων`, `πολιτεια`, etc.
+- Case-insensitive matching
+
+**Custom Aliases:**
+Create `~/.pi-grapheion/aliases.yaml` or `.pi-grapheion/aliases.yaml`:
+```yaml
+aliases:
+  euth: tlg0059.tlg001
+  rep: tlg0059.tlg030
+  phaedo: tlg0059.tlg004
+```
+
+Project config (`.pi-grapheion/`) overrides user config (`~/.pi-grapheion/`).
+
 #### Extracting Specific Ranges
 
 Extract specific Stephanus passages instead of entire works:
 
 ```bash
-# Single section
+# Single section (work ID or alias)
 python -m pi_grapheion.cli extract tlg0059.tlg001 2a
+python -m pi_grapheion.cli extract euthyphro 2a
 
 # Single page (all sections)
-python -m pi_grapheion.cli extract tlg0059.tlg001 2
+python -m pi_grapheion.cli extract euthyphro 2
 
 # Section range (inclusive)
-python -m pi_grapheion.cli extract tlg0059.tlg001 2a-3e
+python -m pi_grapheion.cli extract euthyphro 2a-3e
 
 # Page range
-python -m pi_grapheion.cli extract tlg0059.tlg001 2-5
+python -m pi_grapheion.cli extract republic 2-5
 
 # Combine with output styles
-python -m pi_grapheion.cli extract tlg0059.tlg001 2a-3e --style S --print
+python -m pi_grapheion.cli extract euthyphro 2a-3e --style S --print
 ```
 
 **Range Syntax:**
@@ -166,27 +193,12 @@ python -m pi_grapheion.cli extract euthyphro --passages 5a,7b-7c --style A --pri
 ```
 
 **Anthology Features:**
-- **Work name aliases**: Use "euthyphro" or "republic" instead of TLG IDs
 - **Discontinuous ranges**: Extract non-contiguous passages like "5a, 7b-7c, 10a"
 - **Multi-work extraction**: Combine passages from multiple works in one output
 - **Contextual headers**: Each block shows work title (Greek + English) and range
 - **Block separation**: Blank lines separate different passages
 - **Book number support**: Multi-book works display as "Republic (Πολιτεία) 1.354b"
 - **Style restriction**: Only styles A-D supported (E and S raise error)
-
-**Alias Configuration:**
-- Automatic aliases from catalog (English/Greek work titles)
-- User config: `~/.pi-grapheion/aliases.yaml`
-- Project config: `.pi-grapheion/aliases.yaml` (overrides user config)
-- Case-insensitive matching
-
-Example `aliases.yaml`:
-```yaml
-aliases:
-  euth: tlg0059.tlg001
-  rep: tlg0059.tlg030
-  phaedo: tlg0059.tlg004
-```
 
 #### Options
 ```bash
