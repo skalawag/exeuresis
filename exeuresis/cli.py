@@ -28,6 +28,33 @@ from exeuresis.exceptions import (
 logger = logging.getLogger(__name__)
 
 
+def parse_wrap_arg(value):
+    """Parse --wrap argument, allowing integers or 'off'/0 for no wrapping."""
+
+    if isinstance(value, int):
+        if value < 0:
+            raise argparse.ArgumentTypeError("wrap width must be positive or 0 to disable")
+        return value or None
+
+    if value is None:
+        return 79
+
+    str_value = str(value).strip().lower()
+
+    if str_value in {"off", "none", "disable"}:
+        return None
+
+    try:
+        width = int(str_value)
+    except ValueError as exc:  # pragma: no cover - defensive
+        raise argparse.ArgumentTypeError("wrap width must be an integer or 'off'") from exc
+
+    if width < 0:
+        raise argparse.ArgumentTypeError("wrap width must be positive or 0 to disable")
+
+    return width or None
+
+
 def handle_list_authors(args):
     """Handle the list-authors command."""
     catalog = PerseusCatalog()
@@ -199,6 +226,8 @@ def handle_anthology_extract(args):
         "stephanus_layout": OutputStyle.STEPHANUS_LAYOUT,
     }
     output_style = style_map[args.style]
+    wrap_width = getattr(args, "wrap_width", 79)
+    wrap_width = getattr(args, "wrap_width", 79)
 
     # Determine output destination
     output_to_stdout = args.print or (args.output and str(args.output) == "-")
@@ -214,7 +243,7 @@ def handle_anthology_extract(args):
         blocks = extractor.extract_passages(resolved_passages)
 
         # Format blocks
-        formatter = AnthologyFormatter(style=output_style)
+        formatter = AnthologyFormatter(style=output_style, wrap_width=wrap_width)
         output_text = formatter.format_blocks(blocks)
 
         # Output
@@ -312,6 +341,7 @@ def handle_extract(args):
     }
 
     output_style = style_map[args.style]
+    wrap_width = getattr(args, "wrap_width", 79)
 
     # Determine output destination
     output_to_stdout = args.print or (args.output and str(args.output) == "-")
@@ -386,7 +416,12 @@ def handle_extract(args):
         # Format output
         if args.verbose:
             print("Formatting text...", file=sys.stderr)
-        formatter = TextFormatter(dialogue, extractor=extractor, parser=parser_obj)
+        formatter = TextFormatter(
+            dialogue,
+            extractor=extractor,
+            parser=parser_obj,
+            wrap_width=wrap_width,
+        )
         formatted_text = formatter.format(output_style)
 
         # Output the text
@@ -423,7 +458,7 @@ def handle_extract(args):
 def main():
     """Main entry point for the CLI."""
     parser = argparse.ArgumentParser(
-        prog="perseus",
+        prog="exeuresis",
         description="Extract and reformat Greek texts from Perseus Digital Library",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
@@ -544,6 +579,14 @@ Examples:
         "--verbose",
         action="store_true",
         help="Verbose output",
+    )
+    extract_parser.add_argument(
+        "--wrap",
+        "--wrap-width",
+        dest="wrap_width",
+        type=parse_wrap_arg,
+        default=79,
+        help="Wrap output to N columns (default: 79). Use 0 or 'off' to disable wrapping.",
     )
     extract_parser.set_defaults(func=handle_extract)
 
