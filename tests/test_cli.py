@@ -55,8 +55,9 @@ class TestCLIIntegration:
         assert result.returncode == 0
         assert "Plato" in result.stdout
         assert "Euthyphro" in result.stdout
-        # Check that page ranges are included
-        assert "[2-16]" in result.stdout  # Euthyphro's page range
+        # Check that page ranges are included in tabular format
+        assert "2-16" in result.stdout  # Euthyphro's page range
+        assert "tlg0059.tlg001" in result.stdout  # Work ID format
 
     def test_list_works_by_author_name_lowercase(self, cli_command):
         """Test list-works with lowercase author name."""

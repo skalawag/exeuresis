@@ -55,6 +55,44 @@ def parse_wrap_arg(value):
     return width or None
 
 
+def _print_works_table(works):
+    """Print works in tabular format."""
+    if not works:
+        return
+    
+    # Calculate column widths
+    title_width = max(
+        len(f"{w.title_en} ({w.title_grc})" if w.title_grc else w.title_en)
+        for w in works
+    )
+    title_width = max(title_width, len("Title"))
+    
+    sections_width = max(
+        len(w.page_range) if w.page_range else 0
+        for w in works
+    )
+    sections_width = max(sections_width, len("Sections"))
+    
+    # Work ID format: tlg0059.tlg001
+    work_id_width = max(
+        len(f"{w.tlg_id}.{w.work_id}")
+        for w in works
+    )
+    work_id_width = max(work_id_width, len("File"))
+    
+    # Print header
+    header = f"{'Title':<{title_width}}  {'Sections':<{sections_width}}  {'File':<{work_id_width}}"
+    print(header)
+    print("-" * len(header))
+    
+    # Print rows
+    for work in works:
+        title = f"{work.title_en} ({work.title_grc})" if work.title_grc else work.title_en
+        sections = work.page_range if work.page_range else ""
+        file_id = f"{work.tlg_id}.{work.work_id}"
+        print(f"{title:<{title_width}}  {sections:<{sections_width}}  {file_id:<{work_id_width}}")
+
+
 def handle_list_authors(args):
     """Handle the list-authors command."""
     catalog = PerseusCatalog()
@@ -88,8 +126,7 @@ def handle_list_works(args):
             if works:
                 print(f"\n{author}")
                 print(f"Found {len(works)} works:\n")
-                for work in works:
-                    print(work)
+                _print_works_table(works)
                 total_works += len(works)
 
         print(f"\n{'='*70}")
@@ -123,8 +160,7 @@ def handle_list_works(args):
         return
 
     print(f"Found {len(works)} works:\n")
-    for work in works:
-        print(work)
+    _print_works_table(works)
 
 
 def handle_search(args):
