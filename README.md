@@ -19,6 +19,7 @@ This tool extracts text from TEI XML files from the Perseus Digital Library and 
 - **Comprehensive error handling** - Clear, actionable error messages
 - **Command-line interface** - Intuitive subcommands for all operations
 - **Test coverage: 77%** - 145 tests with TDD methodology
+- **Robust TEI parsing** - Safely handles inline XML comments and editorial markup within paragraphs
 
 ## Installation
 

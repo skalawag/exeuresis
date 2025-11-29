@@ -3,7 +3,7 @@
 from typing import List, Dict
 from lxml import etree
 
-from pi_grapheion.exceptions import EmptyExtractionError
+from exeuresis.exceptions import EmptyExtractionError
 
 
 class TextExtractor:
@@ -287,6 +287,12 @@ class TextExtractor:
 
         # Iterate through all children
         for child in element:
+            # Skip non-element nodes (e.g., comments, processing instructions)
+            if not isinstance(child.tag, str):
+                if child.tail:
+                    text_parts.append(child.tail)
+                continue
+
             # Skip label and milestone elements
             if child.tag in [
                 f"{{{self.NS['tei']}}}label",
@@ -411,6 +417,12 @@ class TextExtractor:
 
         # Process all children
         for child in element:
+            # Skip non-element nodes (e.g., comments, processing instructions)
+            if not isinstance(child.tag, str):
+                if child.tail:
+                    current_text_parts.append(child.tail)
+                continue
+
             if child.tag == f"{{{self.NS['tei']}}}milestone":
                 # Check for paragraph milestone
                 if child.get("ed") == "P" and child.get("unit") == "para":

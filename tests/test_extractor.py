@@ -1,7 +1,9 @@
 """Tests for text extraction functionality."""
 
-import pytest
 from pathlib import Path
+import textwrap
+
+import pytest
 
 # from exeuresis.extractor import TextExtractor
 # from exeuresis.parser import TEIParser
@@ -106,6 +108,34 @@ class TestTextExtractor:
         stephanus = dialogue[0]["stephanus"]
         assert len(stephanus) == 1
         assert "2a" in stephanus  # section number
+
+    def test_extract_handles_inline_comments(self, tmp_path):
+        """Regression: inline XML comments should not break extraction."""
+        from exeuresis.parser import TEIParser
+        from exeuresis.extractor import TextExtractor
+
+        xml_content = textwrap.dedent(
+            """<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+            <TEI xmlns=\"http://www.tei-c.org/ns/1.0\">
+              <text>
+                <body>
+                  <p>Intro <!-- comment -->text content</p>
+                </body>
+              </text>
+            </TEI>
+            """
+        )
+
+        xml_path = tmp_path / "comment_fixture.xml"
+        xml_path.write_text(xml_content, encoding="utf-8")
+
+        parser = TEIParser(xml_path)
+        extractor = TextExtractor(parser)
+
+        dialogue = extractor.get_dialogue_text()
+
+        assert len(dialogue) == 1
+        assert dialogue[0]["text"] == "Intro text content"
 
     def test_handle_editorial_markup(self, sample_xml_path):
         """Test 7: Should handle editorial markup like <del> tags."""
