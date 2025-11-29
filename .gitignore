@@ -2,6 +2,7 @@
 canonical-greekLit/
 output/
 docs/plans/
+.factory/
 .worktrees
 aliases.yaml
 
