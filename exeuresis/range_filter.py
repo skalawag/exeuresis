@@ -67,6 +67,8 @@ class StephanusRangeParser:
             start = parts[0].strip()
             end = parts[1].strip()
 
+            end = self._expand_shorthand_end(start, end)
+
             # Validate both parts
             if not self._is_valid_marker(start) or not self._is_valid_marker(end):
                 raise ValueError(f"Invalid range format: '{range_spec}'")
@@ -99,6 +101,16 @@ class StephanusRangeParser:
         """Check if a marker has a section letter."""
         match = self.MARKER_PATTERN.match(marker)
         return match and match.group(2) is not None
+
+    def _expand_shorthand_end(self, start: str, end: str) -> str:
+        """Expand shorthand end markers like '3a-c' → '3c'."""
+        if re.match(r'^[a-z]$', end):
+            start_match = self.MARKER_PATTERN.match(start)
+            if not start_match:
+                raise ValueError(f"Invalid range format: '{start}'")
+            page = start_match.group(1)
+            end = f"{page}{end}"
+        return end
 
 
 class StephanusComparator:

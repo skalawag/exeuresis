@@ -167,6 +167,7 @@ python -m exeuresis.cli extract euthyphro 2
 
 # Section range (inclusive)
 python -m exeuresis.cli extract euthyphro 2a-3e
+python -m exeuresis.cli extract euthyphro 3a-c  # shorthand for 3a-3c
 
 # Page range
 python -m exeuresis.cli extract republic 2-5
@@ -179,6 +180,7 @@ python -m exeuresis.cli extract euthyphro 2a-3e --style S --print
 - `2a` - Single section
 - `2` - All sections from page 2 (2a, 2b, 2c, 2d, 2e)
 - `2a-3e` - Section range from 2a through 3e (inclusive on both ends)
+- `3a-c` - Shorthand section range inheriting the start page (same as `3a-3c`)
 - `2-5` - Page range (all sections from pages 2, 3, 4, and 5)
 - Ranges spanning multiple books work seamlessly (e.g., Republic `354a-357b`)
 

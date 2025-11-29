@@ -72,6 +72,14 @@ class TestStephanusRangeParser:
         assert spec.end == "328c"
         assert spec.range_type == RangeType.SECTION_RANGE
 
+    def test_parse_section_range_shorthand_end(self):
+        """Test parsing shorthand section range like '327a-c'."""
+        parser = StephanusRangeParser()
+        spec = parser.parse("327a-c")
+        assert spec.start == "327a"
+        assert spec.end == "327c"
+        assert spec.range_type == RangeType.SECTION_RANGE
+
     def test_parse_page_range(self):
         """Test parsing page range like '327-329'."""
         parser = StephanusRangeParser()
@@ -202,6 +210,14 @@ class TestRangeFilter:
         assert len(result) == 3
         # Should include 327c (end is inclusive)
         assert result[-1]["stephanus"] == ["327c"]
+
+    def test_filter_shorthand_section_range(self):
+        """Test filtering using shorthand notation like '327a-c'."""
+        filter_obj = RangeFilter()
+        result = filter_obj.filter(self.sample_dialogue, "327a-c")
+        assert len(result) == 3
+        assert result[0]["text"] == "Text at 327a"
+        assert result[-1]["text"] == "Text at 327c"
 
     def test_filter_nonexistent_range_raises_error(self):
         """Test that filtering to nonexistent range raises error."""
