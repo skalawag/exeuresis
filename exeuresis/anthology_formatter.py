@@ -1,6 +1,6 @@
 """Formatter for anthology output with multiple blocks."""
 
-from typing import List
+from typing import List, Optional
 
 from exeuresis.anthology_extractor import AnthologyBlock
 from exeuresis.formatter import OutputStyle, TextFormatter
@@ -10,7 +10,7 @@ from exeuresis.exceptions import InvalidStyleError
 class AnthologyFormatter:
     """Format anthology blocks with headers and block separation."""
 
-    def __init__(self, style: OutputStyle):
+    def __init__(self, style: OutputStyle, wrap_width: Optional[int] = 79):
         """
         Initialize AnthologyFormatter.
 
@@ -35,6 +35,7 @@ class AnthologyFormatter:
             )
 
         self.style = style
+        self.wrap_width = wrap_width
 
     def format_blocks(self, blocks: List[AnthologyBlock]) -> str:
         """
@@ -53,10 +54,10 @@ class AnthologyFormatter:
 
         for block in blocks:
             # Format header
-            header = block.format_header(width=79)
+            header = block.format_header(width=self.wrap_width)
 
             # Format block content using TextFormatter
-            formatter = TextFormatter(block.segments)
+            formatter = TextFormatter(block.segments, wrap_width=self.wrap_width)
             content = formatter.format(self.style)
 
             # Combine header and content

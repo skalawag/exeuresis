@@ -62,7 +62,7 @@ class AnthologyBlock:
     segments: List[Dict]
     book: Optional[str] = None
 
-    def format_header(self, width: int = 79) -> str:
+    def format_header(self, width: Optional[int] = 79) -> str:
         """
         Format a header for the anthology block.
 
@@ -80,7 +80,12 @@ class AnthologyBlock:
             range_part = self.range_display
 
         header_line = f"{self.work_title_en} ({self.work_title_gr}) {range_part}"
-        separator = "-" * width
+        if width is None:
+            separator_width = max(len(header_line), 79)
+        else:
+            separator_width = max(width, 1)
+
+        separator = "-" * separator_width
 
         return f"{header_line}\n{separator}"
 

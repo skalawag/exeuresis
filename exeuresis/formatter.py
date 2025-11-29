@@ -1,7 +1,7 @@
 """Text formatting for different output styles."""
 
 from enum import Enum
-from typing import List, Dict
+from typing import List, Dict, Optional
 import re
 import textwrap
 import unicodedata
@@ -22,7 +22,13 @@ class OutputStyle(Enum):
 class TextFormatter:
     """Formats extracted dialogue text according to different styles."""
 
-    def __init__(self, dialogue_data: List[Dict[str, any]], extractor=None, parser=None):
+    def __init__(
+        self,
+        dialogue_data: List[Dict[str, any]],
+        extractor=None,
+        parser=None,
+        wrap_width: Optional[int] = 79,
+    ):
         """
         Initialize formatter with dialogue data.
 
@@ -35,9 +41,44 @@ class TextFormatter:
         self.dialogue_data = dialogue_data
         self.extractor = extractor
         self.parser = parser
+        self.wrap_width = wrap_width
 
         # Extract title if parser provided
         self.title = parser.get_title() if parser else ""
+
+    def _wrap_paragraph(self, text: str) -> str:
+        """Wrap paragraph text if width specified."""
+
+        if not text:
+            return ""
+
+        if self.wrap_width is None:
+            return text
+
+        lines = textwrap.wrap(
+            text,
+            width=self.wrap_width,
+            break_long_words=False,
+            break_on_hyphens=False,
+        )
+        return "\n".join(lines)
+
+    def _wrap_continuous(self, text: str, *, allow_long_words: bool = False) -> str:
+        """Wrap continuous text strings (e.g., scriptio continua)."""
+
+        if not text:
+            return ""
+
+        if self.wrap_width is None:
+            return text
+
+        lines = textwrap.wrap(
+            text,
+            width=self.wrap_width,
+            break_long_words=allow_long_words,
+            break_on_hyphens=False,
+        )
+        return "\n".join(lines)
 
     def _normalize_dashes(self, dialogue_data: List[Dict[str, any]]) -> List[Dict[str, any]]:
         """
@@ -94,7 +135,7 @@ class TextFormatter:
         - All punctuation
         - Speaker labels (only when speaker changes)
         - Stephanus pagination markers (simplified format)
-        - Text wrapped at 79 characters
+        - Text wrapped at configured width (default 79 columns)
         - Paragraphs separated by empty lines (one paragraph per <said> element)
         """
         if not self.dialogue_data:
@@ -120,10 +161,7 @@ class TextFormatter:
                 # Finish current paragraph before adding book header
                 if current_paragraph_parts:
                     paragraph_text = " ".join(current_paragraph_parts)
-                    wrapped_lines = textwrap.wrap(
-                        paragraph_text, width=79, break_long_words=False, break_on_hyphens=False
-                    )
-                    paragraphs.append("\n".join(wrapped_lines))
+                    paragraphs.append(self._wrap_paragraph(paragraph_text))
                     current_paragraph_parts = []
 
                 # Add book header
@@ -141,10 +179,7 @@ class TextFormatter:
                 # Finish current paragraph
                 if current_paragraph_parts:
                     paragraph_text = " ".join(current_paragraph_parts)
-                    wrapped_lines = textwrap.wrap(
-                        paragraph_text, width=79, break_long_words=False, break_on_hyphens=False
-                    )
-                    paragraphs.append("\n".join(wrapped_lines))
+                    paragraphs.append(self._wrap_paragraph(paragraph_text))
                     current_paragraph_parts = []
 
             line_parts = []
@@ -172,10 +207,7 @@ class TextFormatter:
         # Add final paragraph
         if current_paragraph_parts:
             paragraph_text = " ".join(current_paragraph_parts)
-            wrapped_lines = textwrap.wrap(
-                paragraph_text, width=79, break_long_words=False, break_on_hyphens=False
-            )
-            paragraphs.append("\n".join(wrapped_lines))
+            paragraphs.append(self._wrap_paragraph(paragraph_text))
 
         return "\n\n".join(paragraphs)
 
@@ -260,7 +292,7 @@ class TextFormatter:
         Preserves:
         - Word boundaries (spaces)
         - Stephanus pagination markers
-        - Text wrapped at 79 characters
+        - Text wrapped at configured width (default 79 columns)
         Removes:
         - All punctuation
         - Speaker labels
@@ -298,12 +330,8 @@ class TextFormatter:
         # Join all text with single spaces (no paragraph breaks)
         continuous_text = " ".join(text_parts)
 
-        # Wrap at 79 characters
-        wrapped_lines = textwrap.wrap(
-            continuous_text, width=79, break_long_words=False, break_on_hyphens=False
-        )
-
-        return "\n".join(wrapped_lines)
+        # Wrap according to setting (or leave as-is)
+        return self._wrap_continuous(continuous_text)
 
     def _format_scriptio_continua(self) -> str:
         """
@@ -318,7 +346,7 @@ class TextFormatter:
         - No Stephanus markers
         - M-dashes removed (replaced with spaces before removal of all spaces)
         - Continuous text as written in antiquity
-        - Wrapped at 79 characters for readability
+        - Wrapped at configured width for readability (default 79 columns)
         """
         if not self.dialogue_data:
             return ""
@@ -347,13 +375,8 @@ class TextFormatter:
         text_no_accents = ''.join(char for char in text_no_accents
                                    if unicodedata.category(char) != 'Mn')
 
-        # Wrap at 79 characters for readability
-        # For scriptio continua (no spaces), we need break_long_words=True
-        wrapped_lines = textwrap.wrap(
-            text_no_accents, width=79, break_long_words=True, break_on_hyphens=False
-        )
-
-        return "\n".join(wrapped_lines)
+        # Wrap for readability (or leave continuous if disabled)
+        return self._wrap_continuous(text_no_accents, allow_long_words=True)
 
     def _format_minimal_punctuation(self) -> str:
         """
@@ -363,7 +386,7 @@ class TextFormatter:
         - Periods, question marks (;), and colons (·)
         - Speaker labels (only when speaker changes)
         - Stephanus markers (simplified format)
-        - Text wrapped at 79 characters
+        - Text wrapped at configured width (default 79 columns)
         - Paragraphs separated by empty lines (one paragraph per <said> element)
         Removes:
         - Commas
@@ -394,10 +417,7 @@ class TextFormatter:
                 # Finish current paragraph
                 if current_paragraph_parts:
                     paragraph_text = " ".join(current_paragraph_parts)
-                    wrapped_lines = textwrap.wrap(
-                        paragraph_text, width=79, break_long_words=False, break_on_hyphens=False
-                    )
-                    paragraphs.append("\n".join(wrapped_lines))
+                    paragraphs.append(self._wrap_paragraph(paragraph_text))
                     current_paragraph_parts = []
 
             line_parts = []
@@ -428,10 +448,7 @@ class TextFormatter:
         # Add final paragraph
         if current_paragraph_parts:
             paragraph_text = " ".join(current_paragraph_parts)
-            wrapped_lines = textwrap.wrap(
-                paragraph_text, width=79, break_long_words=False, break_on_hyphens=False
-            )
-            paragraphs.append("\n".join(wrapped_lines))
+            paragraphs.append(self._wrap_paragraph(paragraph_text))
 
         return "\n\n".join(paragraphs)
 
@@ -443,7 +460,7 @@ class TextFormatter:
         - Speaker labels (only when speaker changes)
         - Stephanus markers (simplified format)
         - Word boundaries (spaces)
-        - Text wrapped at 79 characters
+        - Text wrapped at configured width (default 79 columns)
         - Paragraphs separated by empty lines (one paragraph per <said> element)
         Removes:
         - All punctuation
@@ -474,10 +491,7 @@ class TextFormatter:
                 # Finish current paragraph
                 if current_paragraph_parts:
                     paragraph_text = " ".join(current_paragraph_parts)
-                    wrapped_lines = textwrap.wrap(
-                        paragraph_text, width=79, break_long_words=False, break_on_hyphens=False
-                    )
-                    paragraphs.append("\n".join(wrapped_lines))
+                    paragraphs.append(self._wrap_paragraph(paragraph_text))
                     current_paragraph_parts = []
 
             line_parts = []
@@ -509,10 +523,7 @@ class TextFormatter:
         # Add final paragraph
         if current_paragraph_parts:
             paragraph_text = " ".join(current_paragraph_parts)
-            wrapped_lines = textwrap.wrap(
-                paragraph_text, width=79, break_long_words=False, break_on_hyphens=False
-            )
-            paragraphs.append("\n".join(wrapped_lines))
+            paragraphs.append(self._wrap_paragraph(paragraph_text))
 
         return "\n\n".join(paragraphs)
 

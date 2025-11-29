@@ -163,6 +163,30 @@ class TestCLIIntegration:
         assert len(result.stdout) > 0
         assert "ΕΥΘΥΦΡΩΝ" in result.stdout
 
+    def test_extract_wrap_controls(self, cli_command):
+        """--wrap flag should toggle wrapping."""
+        no_wrap = subprocess.run(
+            cli_command + ["extract", "tlg0059.tlg001", "--print", "--wrap", "0"],
+            capture_output=True,
+            text=True,
+        )
+
+        assert no_wrap.returncode == 0
+        paragraphs_no_wrap = [p for p in no_wrap.stdout.strip().split("\n\n") if p.strip()]
+        assert len(paragraphs_no_wrap) >= 2
+        assert "\n" not in paragraphs_no_wrap[1]
+
+        wrapped = subprocess.run(
+            cli_command + ["extract", "tlg0059.tlg001", "--print", "--wrap", "40"],
+            capture_output=True,
+            text=True,
+        )
+
+        assert wrapped.returncode == 0
+        paragraphs_wrapped = [p for p in wrapped.stdout.strip().split("\n\n") if p.strip()]
+        assert len(paragraphs_wrapped) >= 2
+        assert "\n" in paragraphs_wrapped[1]
+
     def test_extract_invalid_work_id(self, cli_command):
         """Test extract with invalid work ID."""
         result = subprocess.run(

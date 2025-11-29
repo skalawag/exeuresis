@@ -68,6 +68,21 @@ class TestTextFormatter:
         lines = output.strip().split("\n")
         assert len(lines) >= 3  # At least 3 dialogue entries
 
+    def test_style_a_custom_wrap_width(self, sample_dialogue_data):
+        """Style A should honor custom wrap width."""
+        from exeuresis.formatter import TextFormatter, OutputStyle
+
+        formatter = TextFormatter(sample_dialogue_data, wrap_width=20)
+        output = formatter.format(OutputStyle.FULL_MODERN)
+
+        first_paragraph = output.strip().split("\n\n")[0]
+        assert any(len(line) <= 20 for line in first_paragraph.splitlines() if line.strip())
+
+        formatter_no_wrap = TextFormatter(sample_dialogue_data, wrap_width=None)
+        output_no_wrap = formatter_no_wrap.format(OutputStyle.FULL_MODERN)
+        first_paragraph_no_wrap = output_no_wrap.strip().split("\n\n")[0]
+        assert "\n" not in first_paragraph_no_wrap
+
     def test_style_d_scriptio_continua(self, sample_dialogue_data):
         """Test 10-12: Style D should produce uppercase continuous text."""
         from exeuresis.formatter import TextFormatter, OutputStyle
@@ -227,6 +242,18 @@ class TestTextFormatter:
         assert "ΕΥΘ." not in output
         assert "ΣΩ." not in output
 
+    def test_scriptio_wrap_controls(self, sample_dialogue_data):
+        """Scriptio continua should follow wrap width settings."""
+        from exeuresis.formatter import TextFormatter, OutputStyle
+
+        formatter_wrapped = TextFormatter(sample_dialogue_data, wrap_width=10)
+        wrapped_output = formatter_wrapped.format(OutputStyle.SCRIPTIO_CONTINUA)
+        assert all(len(line) <= 10 for line in wrapped_output.splitlines() if line.strip())
+
+        formatter_unwrapped = TextFormatter(sample_dialogue_data, wrap_width=None)
+        unwrapped_output = formatter_unwrapped.format(OutputStyle.SCRIPTIO_CONTINUA)
+        assert "\n" not in unwrapped_output.strip()
+
     def test_style_s_stephanus_layout(self, sample_dialogue_data):
         """Test Style S: Stephanus 1578 edition layout."""
         from exeuresis.formatter import TextFormatter, OutputStyle
@@ -252,3 +279,25 @@ class TestTextFormatter:
                 continue
             output = formatter.format(style)
             assert len(output) > 0, f"Style {style} produced empty output"
+
+    def test_anthology_header_and_wrap_propagation(self, sample_dialogue_data):
+        """Anthology header width and wrap settings should align with CLI flag."""
+        from exeuresis.anthology_extractor import AnthologyBlock
+        from exeuresis.anthology_formatter import AnthologyFormatter
+        from exeuresis.formatter import OutputStyle
+
+        block = AnthologyBlock(
+            work_title_en="Euthyphro",
+            work_title_gr="Εὐθύφρων",
+            range_display="2a-3b",
+            segments=sample_dialogue_data,
+        )
+
+        header_default = block.format_header(width=None)
+        header_lines = header_default.splitlines()
+        assert len(header_lines[1]) >= len(header_lines[0])
+
+        formatter = AnthologyFormatter(OutputStyle.FULL_MODERN, wrap_width=None)
+        output = formatter.format_blocks([block])
+        body = output.split("\n", 2)[2]
+        assert "\n" not in body.split("\n\n")[0]
