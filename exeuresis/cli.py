@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import shutil
 import sys
 from pathlib import Path
 
@@ -60,12 +61,15 @@ def _print_works_table(works):
     if not works:
         return
     
-    # Calculate column widths
-    title_width = max(
+    # Get terminal width
+    terminal_width = shutil.get_terminal_size(fallback=(80, 24)).columns
+    
+    # Calculate natural column widths
+    natural_title_width = max(
         len(f"{w.title_en} ({w.title_grc})" if w.title_grc else w.title_en)
         for w in works
     )
-    title_width = max(title_width, len("Title"))
+    natural_title_width = max(natural_title_width, len("Title"))
     
     sections_width = max(
         len(w.page_range) if w.page_range else 0
@@ -80,6 +84,20 @@ def _print_works_table(works):
     )
     work_id_width = max(work_id_width, len("File"))
     
+    # Calculate available width for title (leave 4 chars for separators)
+    fixed_width = sections_width + work_id_width + 4
+    available_title_width = terminal_width - fixed_width
+    
+    # Set title width (minimum 30, max terminal allows)
+    title_width = max(30, min(natural_title_width, available_title_width))
+    
+    # Helper function to truncate title if needed
+    def format_title(work):
+        title = f"{work.title_en} ({work.title_grc})" if work.title_grc else work.title_en
+        if len(title) > title_width:
+            return title[:title_width-3] + "..."
+        return title
+    
     # Print header
     header = f"{'Title':<{title_width}}  {'Sections':<{sections_width}}  {'File':<{work_id_width}}"
     print(header)
@@ -87,7 +105,7 @@ def _print_works_table(works):
     
     # Print rows
     for work in works:
-        title = f"{work.title_en} ({work.title_grc})" if work.title_grc else work.title_en
+        title = format_title(work)
         sections = work.page_range if work.page_range else ""
         file_id = f"{work.tlg_id}.{work.work_id}"
         print(f"{title:<{title_width}}  {sections:<{sections_width}}  {file_id:<{work_id_width}}")
@@ -174,13 +192,17 @@ def handle_search(args):
 
     print(f"Found {len(results)} matches for '{args.query}':\n")
 
-    current_author = None
+    # Group works by author
+    author_works = {}
     for author, work in results:
-        # Print author header if we're on a new author
-        if current_author is None or current_author.tlg_id != author.tlg_id:
-            print(f"\n{author}")
-            current_author = author
-        print(work)
+        if author.tlg_id not in author_works:
+            author_works[author.tlg_id] = (author, [])
+        author_works[author.tlg_id][1].append(work)
+
+    # Print each author with their works as a table
+    for author, works in author_works.values():
+        print(f"\n{author}")
+        _print_works_table(works)
 
 
 def parse_anthology_args(input_files, passage_specs):
