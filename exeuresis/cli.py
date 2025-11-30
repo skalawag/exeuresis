@@ -113,7 +113,7 @@ def _print_works_table(works):
 
 def handle_list_authors(args):
     """Handle the list-authors command."""
-    catalog = PerseusCatalog()
+    catalog = PerseusCatalog(corpus_name=args.corpus)
     authors = catalog.list_authors()
 
     if not authors:
@@ -127,7 +127,7 @@ def handle_list_authors(args):
 
 def handle_list_works(args):
     """Handle the list-works command."""
-    catalog = PerseusCatalog()
+    catalog = PerseusCatalog(corpus_name=args.corpus)
 
     # Handle --all flag
     if args.all:
@@ -183,7 +183,7 @@ def handle_list_works(args):
 
 def handle_search(args):
     """Handle the search command."""
-    catalog = PerseusCatalog()
+    catalog = PerseusCatalog(corpus_name=args.corpus)
     results = catalog.search_works(args.query)
 
     if not results:
@@ -203,6 +203,43 @@ def handle_search(args):
     for author, works in author_works.values():
         print(f"\n{author}")
         _print_works_table(works)
+
+
+def handle_list_corpora(args):
+    """Handle the list-corpora command."""
+    from exeuresis.config import get_corpora, get_default_corpus_name
+
+    corpora = get_corpora()
+    default_name = get_default_corpus_name()
+
+    if not corpora:
+        print("No corpora configured.", file=sys.stderr)
+        return
+
+    print("Configured corpora:\n")
+
+    for name, corpus_config in sorted(corpora.items()):
+        # Format corpus name with default indicator
+        display_name = f"{name} (default)" if name == default_name else name
+        print(f"  {display_name}")
+        print(f"    Path: {corpus_config.path}")
+
+        if corpus_config.description:
+            print(f"    Description: {corpus_config.description}")
+
+        # Check if corpus exists and count authors/works
+        if corpus_config.path.exists():
+            try:
+                catalog = PerseusCatalog(data_dir=corpus_config.path)
+                authors = catalog.list_authors()
+                total_works = sum(len(catalog.list_works(a.tlg_id)) for a in authors)
+                print(f"    Status: ✓ Found ({len(authors)} authors, {total_works} works)")
+            except Exception as e:
+                print(f"    Status: ⚠ Found but error reading: {e}")
+        else:
+            print(f"    Status: ✗ Not found")
+
+        print()  # Blank line between corpora
 
 
 def parse_anthology_args(input_files, passage_specs):
@@ -297,7 +334,7 @@ def handle_anthology_extract(args):
 
     try:
         # Extract anthology blocks
-        extractor = AnthologyExtractor()
+        extractor = AnthologyExtractor(corpus_name=args.corpus)
         blocks = extractor.extract_passages(resolved_passages)
 
         # Format blocks
@@ -362,11 +399,11 @@ def handle_extract(args):
         # It could be a work ID or work name alias
         # Try to resolve it using WorkResolver
         try:
-            resolver = WorkResolver()
+            resolver = WorkResolver(corpus_name=args.corpus)
             work_id = resolver.resolve(input_str)
 
             # Now resolve the work ID to a file path
-            catalog = PerseusCatalog()
+            catalog = PerseusCatalog(corpus_name=args.corpus)
             input_file = catalog.resolve_work_id(work_id)
 
             if args.verbose:
@@ -546,11 +583,16 @@ For detailed help on any command, use:
         """,
     )
 
-    # Add global debug flag
+    # Add global flags
     parser.add_argument(
         "--debug",
         action="store_true",
         help="Enable debug logging output"
+    )
+    parser.add_argument(
+        "--corpus",
+        metavar="NAME",
+        help='Corpus to use (default: from config or "default")'
     )
 
     # Add subcommands
@@ -677,11 +719,17 @@ Examples:
     search_parser.add_argument("query", help="Search query (case-insensitive)")
     search_parser.set_defaults(func=handle_search)
 
+    # List corpora subcommand
+    list_corpora_parser = subparsers.add_parser(
+        "list-corpora", help="List all configured corpora"
+    )
+    list_corpora_parser.set_defaults(func=handle_list_corpora)
+
     # Check for backward compatibility (old-style invocation without subcommand)
     # If first arg looks like a file path (contains / or ends with .xml), insert 'extract'
     if len(sys.argv) > 1:
         first_arg = sys.argv[1]
-        valid_commands = {"extract", "list-authors", "list-works", "search"}
+        valid_commands = {"extract", "list-authors", "list-works", "search", "list-corpora"}
         if first_arg not in valid_commands and (
             "/" in first_arg or first_arg.endswith(".xml")
         ):

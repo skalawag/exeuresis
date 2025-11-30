@@ -94,16 +94,17 @@ class AnthologyBlock:
 class AnthologyExtractor:
     """Extract anthology passages from multiple works and ranges."""
 
-    def __init__(self, data_dir: Optional[Path] = None):
+    def __init__(self, data_dir: Optional[Path] = None, corpus_name: Optional[str] = None):
         """
         Initialize AnthologyExtractor.
 
         Args:
-            data_dir: Path to canonical-greekLit data directory
-                     (defaults to from config or canonical-greekLit/data)
+            data_dir: Path to canonical-greekLit data directory (explicit path, overrides corpus_name)
+            corpus_name: Named corpus from config (uses default if None)
         """
-        self.catalog = PerseusCatalog()
-        self.data_dir = data_dir or get_corpus_path()
+        self.catalog = PerseusCatalog(corpus_name=corpus_name)
+        self.corpus_name = corpus_name
+        self.data_dir = data_dir or get_corpus_path(corpus_name)
         self.range_filter = RangeFilter()
 
     def extract_passages(self, passages: List[PassageSpec]) -> List[AnthologyBlock]:

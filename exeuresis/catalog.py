@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import List, Dict, Optional
 from lxml import etree
 
-from exeuresis.config import get_corpus_path
+from exeuresis.config import get_corpus_path, get_default_corpus_name
 from exeuresis.exceptions import WorkNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -62,17 +62,20 @@ class PerseusCatalog:
     # CTS namespace
     NS = {"ti": "http://chs.harvard.edu/xmlns/cts"}
 
-    def __init__(self, data_dir: Path = None):
+    def __init__(self, data_dir: Path = None, corpus_name: Optional[str] = None):
         """
         Initialize catalog with path to canonical-greekLit/data directory.
 
         Args:
-            data_dir: Path to the data directory (default: from config or canonical-greekLit/data)
+            data_dir: Path to the data directory (explicit path, overrides corpus_name)
+            corpus_name: Named corpus from config (uses default if None)
         """
         if data_dir is None:
-            self.data_dir = get_corpus_path()
+            self.data_dir = get_corpus_path(corpus_name)
+            self.corpus_name = corpus_name or get_default_corpus_name()
         else:
             self.data_dir = Path(data_dir)
+            self.corpus_name = "custom"
 
         if not self.data_dir.exists():
             raise FileNotFoundError(f"Data directory not found: {self.data_dir}")

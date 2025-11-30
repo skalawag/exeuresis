@@ -19,6 +19,7 @@ class WorkResolver:
         config_path: Optional[Path] = None,
         user_config_path: Optional[Path] = None,
         project_config_path: Optional[Path] = None,
+        corpus_name: Optional[str] = None,
     ):
         """
         Initialize WorkResolver with optional config paths.
@@ -27,8 +28,10 @@ class WorkResolver:
             config_path: Single config file (for testing)
             user_config_path: User config (~/.exeuresis/aliases.yaml)
             project_config_path: Project config (.exeuresis/aliases.yaml)
+            corpus_name: Named corpus to use (uses default if None)
         """
-        self.catalog = PerseusCatalog()
+        self.catalog = PerseusCatalog(corpus_name=corpus_name)
+        self.corpus_name = corpus_name
         self.aliases: Dict[str, str] = {}
 
         # Load aliases in order: extracted, user, project (project overrides)

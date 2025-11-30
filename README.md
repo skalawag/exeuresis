@@ -79,6 +79,48 @@ If no configuration is provided, defaults to `./canonical-greekLit/data` relativ
 - Relative paths in config files are resolved from the project root
 - Useful for CI/CD, shared team setups, or custom corpus locations
 
+### Working with Multiple Corpora
+
+Configure and work with multiple named corpora simultaneously:
+
+**Multi-Corpus Configuration** (`.exeuresis/config.yaml` or `~/.exeuresis/config.yaml`):
+```yaml
+corpora:
+  main:
+    path: ./canonical-greekLit/data
+    description: "Primary Perseus Greek corpus"
+  first-edition:
+    path: /data/perseus-2020/canonical-greekLit/data
+    description: "2020 snapshot for comparison"
+  dev:
+    path: ./test-fixtures/mini-corpus
+    description: "Test corpus (Plato only)"
+
+default_corpus: main
+```
+
+**Using Multiple Corpora:**
+```bash
+# List all configured corpora
+python -m exeuresis.cli list-corpora
+
+# Use default corpus (no --corpus flag needed)
+python -m exeuresis.cli list-authors
+
+# Use specific corpus
+python -m exeuresis.cli list-authors --corpus dev
+python -m exeuresis.cli extract euthyphro --corpus first-edition
+python -m exeuresis.cli search "Plato" --corpus main
+```
+
+**Use Cases:**
+- Compare same work across different text versions/editions
+- Test on development corpus before using production
+- Work with Greek and Latin Perseus corpora simultaneously
+- CI/CD with test fixtures vs. full corpus
+
+**Note:** The old single `corpus_path` format remains fully supported for backward compatibility.
+
 ## Quick Start
 
 ```bash
