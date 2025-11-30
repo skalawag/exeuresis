@@ -5,6 +5,7 @@ from typing import List, Dict, Optional
 from pathlib import Path
 
 from exeuresis.catalog import PerseusCatalog
+from exeuresis.config import get_corpus_path
 from exeuresis.parser import TEIParser
 from exeuresis.extractor import TextExtractor
 from exeuresis.range_filter import RangeFilter
@@ -99,10 +100,10 @@ class AnthologyExtractor:
 
         Args:
             data_dir: Path to canonical-greekLit data directory
-                     (defaults to canonical-greekLit/data)
+                     (defaults to from config or canonical-greekLit/data)
         """
         self.catalog = PerseusCatalog()
-        self.data_dir = data_dir or Path("canonical-greekLit/data")
+        self.data_dir = data_dir or get_corpus_path()
         self.range_filter = RangeFilter()
 
     def extract_passages(self, passages: List[PassageSpec]) -> List[AnthologyBlock]:

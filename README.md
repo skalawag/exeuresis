@@ -42,9 +42,42 @@ pip install -e ".[dev]"
 ```
 
 **Important**:
-- The `canonical-greekLit` directory **must** be located at the project root (same level as `exeuresis/`)
+- By default, the tool expects `canonical-greekLit` at the project root (same level as `exeuresis/`)
+- The corpus can be located anywhere on your system using configuration (see Configuration section)
 - It contains ~99 authors and 818 works (several hundred MB of data)
-- The tool expects to find it at `./canonical-greekLit/data/`
+
+## Configuration
+
+The Perseus corpus location is configurable via three methods (in priority order):
+
+### 1. Environment Variable (Highest Priority)
+```bash
+export PERSEUS_CORPUS_PATH=/path/to/canonical-greekLit/data
+python -m exeuresis.cli list-authors
+```
+
+### 2. Project Config
+Create `.exeuresis/config.yaml` in your project directory:
+```yaml
+corpus_path: /absolute/path/to/canonical-greekLit/data
+# or relative to project root:
+corpus_path: ../other-location/canonical-greekLit/data
+```
+
+### 3. User Config
+Create `~/.exeuresis/config.yaml` in your home directory:
+```yaml
+corpus_path: /home/username/data/canonical-greekLit/data
+```
+
+### 4. Default
+If no configuration is provided, defaults to `./canonical-greekLit/data` relative to project root.
+
+**Configuration Notes:**
+- Environment variable takes highest priority
+- Project config (`.exeuresis/`) overrides user config (`~/.exeuresis/`)
+- Relative paths in config files are resolved from the project root
+- Useful for CI/CD, shared team setups, or custom corpus locations
 
 ## Quick Start
 

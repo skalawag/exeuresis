@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List, Dict, Optional
 from lxml import etree
 
+from exeuresis.config import get_corpus_path
 from exeuresis.exceptions import WorkNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -66,11 +67,10 @@ class PerseusCatalog:
         Initialize catalog with path to canonical-greekLit/data directory.
 
         Args:
-            data_dir: Path to the data directory (default: canonical-greekLit/data)
+            data_dir: Path to the data directory (default: from config or canonical-greekLit/data)
         """
         if data_dir is None:
-            # Default to canonical-greekLit/data relative to project root
-            self.data_dir = Path(__file__).parent.parent / "canonical-greekLit" / "data"
+            self.data_dir = get_corpus_path()
         else:
             self.data_dir = Path(data_dir)
 

@@ -24,6 +24,7 @@ Segment schema (approx): `{speaker,label,text,stephanus[],said_id,is_paragraph_s
 - Multi-book: uppercase accented-stripped headers auto.
 - Anthology: `--passages` per work, styles limited to A-D.
 - Aliases: `.exeuresis/aliases.yaml` (project overrides home).
+- Corpus path: configurable via `PERSEUS_CORPUS_PATH` env var, `.exeuresis/config.yaml` (project), or `~/.exeuresis/config.yaml` (user). Defaults to `./canonical-greekLit/data`.
 - Logging: `--debug` for stack traces.
 
 ## Constraints / warnings
