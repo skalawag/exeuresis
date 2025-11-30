@@ -8,7 +8,10 @@ from types import SimpleNamespace
 import pytest
 
 from exeuresis.config import CorpusConfig
-from exeuresis.corpus_health import CorpusHealthResult, CorpusHealthStatus, FileCheckResult
+from exeuresis.corpus_health import (
+    CorpusHealthResult,
+    CorpusHealthStatus,
+)
 
 
 def _make_result(name="main", status=CorpusHealthStatus.OK):
@@ -34,7 +37,9 @@ def test_list_corpora_compact_output(monkeypatch, capsys):
     from exeuresis import cli
 
     corpora = {
-        "main": CorpusConfig(name="main", path=Path("/tmp/main"), description="Primary"),
+        "main": CorpusConfig(
+            name="main", path=Path("/tmp/main"), description="Primary"
+        ),
         "sandbox": CorpusConfig(name="sandbox", path=Path("/tmp/sandbox")),
     }
 
@@ -64,7 +69,9 @@ def test_list_corpora_detailed_output(monkeypatch, capsys):
     from exeuresis import cli
 
     corpora = {
-        "main": CorpusConfig(name="main", path=Path("/tmp/main"), description="Primary"),
+        "main": CorpusConfig(
+            name="main", path=Path("/tmp/main"), description="Primary"
+        ),
     }
 
     monkeypatch.setattr("exeuresis.cli.get_corpora", lambda: corpora)
@@ -115,7 +122,9 @@ def test_check_corpus_cli_handles_missing_corpus(monkeypatch, capsys):
     monkeypatch.setattr("exeuresis.cli.get_corpora", lambda: {})
     monkeypatch.setattr("exeuresis.cli.get_default_corpus_name", lambda: "main")
 
-    args = SimpleNamespace(corpus="missing", mode="quick", sample_percent=None, seed=None)
+    args = SimpleNamespace(
+        corpus="missing", mode="quick", sample_percent=None, seed=None
+    )
     with pytest.raises(SystemExit):
         cli.handle_check_corpus(args)
 
@@ -184,7 +193,9 @@ def test_check_corpus_accepts_path(monkeypatch, capsys, tmp_path):
 
     monkeypatch.setattr("exeuresis.cli.check_corpus", fake_check)
 
-    args = SimpleNamespace(corpus=str(target), mode="quick", sample_percent=None, seed=None)
+    args = SimpleNamespace(
+        corpus=str(target), mode="quick", sample_percent=None, seed=None
+    )
     cli.handle_check_corpus(args)
 
     assert captured_config["path"] == target

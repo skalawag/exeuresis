@@ -157,7 +157,11 @@ def check_corpus(
                 continue
 
             file_entries.append(
-                FileCheckResult(author_id=getattr(author, "tlg_id", ""), work_id=work_id, path=file_path)
+                FileCheckResult(
+                    author_id=getattr(author, "tlg_id", ""),
+                    work_id=work_id,
+                    path=file_path,
+                )
             )
 
     total_files = len(file_entries)
@@ -229,7 +233,9 @@ def check_corpus(
             message = f"All {checked_files} checks failed"
         else:
             status = CorpusHealthStatus.WARNING
-            message = f"{len(failed_files)} of {checked_files} sampled files failed to parse"
+            message = (
+                f"{len(failed_files)} of {checked_files} sampled files failed to parse"
+            )
     elif metadata_issues:
         status = CorpusHealthStatus.WARNING
         message = f"{len(metadata_issues)} metadata issues detected"

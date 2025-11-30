@@ -3,6 +3,7 @@
 import logging
 from pathlib import Path
 from typing import Dict, Optional
+
 import yaml
 
 from exeuresis.catalog import PerseusCatalog
@@ -45,9 +46,7 @@ class WorkResolver:
             if user_config_path:
                 self._load_config_file(user_config_path)
             elif Path.home().joinpath(".exeuresis", "aliases.yaml").exists():
-                self._load_config_file(
-                    Path.home() / ".exeuresis" / "aliases.yaml"
-                )
+                self._load_config_file(Path.home() / ".exeuresis" / "aliases.yaml")
 
             # Load project config second (overrides user)
             if project_config_path:
@@ -81,7 +80,7 @@ class WorkResolver:
         raise WorkNotFoundError(
             name,
             f"Could not resolve work name '{name}'. "
-            f"Try using the full TLG ID (e.g., tlg0059.tlg001) or check available aliases."
+            f"Try using the full TLG ID (e.g., tlg0059.tlg001) or check available aliases.",
         )
 
     def _is_tlg_id(self, name: str) -> bool:

@@ -9,6 +9,8 @@ Goal: extract + format Perseus Greek TEI XML via `exeuresis.cli`. Keep answers s
 .venv/bin/python -m exeuresis.cli list-works tlg0059
 .venv/bin/python -m exeuresis.cli extract euthyphro --style A
 .venv/bin/python -m exeuresis.cli extract tlg0059.tlg001 2a-3e --print
+.venv/bin/python -m exeuresis.cli extract euthyphro --format json  # JSON output
+.venv/bin/python -m exeuresis.cli extract euthyphro --format jsonl # JSONL output
 .venv/bin/python -m pytest tests/ -v
 ```
 
@@ -21,6 +23,7 @@ Segment schema (approx): `{speaker,label,text,stephanus[],said_id,is_paragraph_s
 ## Key behaviors
 
 - Styles: A full modern, B minimal punct, C no punct, D no punct/labels, E scriptio continua, S Stephanus layout (Plato only).
+- Formats: `--format {text,json,jsonl}`. Text is default; JSON outputs array with metadata; JSONL outputs one segment per line.
 - Multi-book: uppercase accented-stripped headers auto.
 - Anthology: `--passages` per work, styles limited to A-D.
 - Aliases: `.exeuresis/aliases.yaml` (project overrides home).

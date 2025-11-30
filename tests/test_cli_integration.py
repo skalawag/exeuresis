@@ -1,9 +1,11 @@
 """Integration tests for CLI with range filtering."""
 
-import pytest
-from pathlib import Path
-from exeuresis.cli import main
 import sys
+from pathlib import Path
+
+import pytest
+
+from exeuresis.cli import main
 
 
 def test_cli_extract_with_range_single_section(monkeypatch, tmp_path, capsys):
@@ -14,13 +16,9 @@ def test_cli_extract_with_range_single_section(monkeypatch, tmp_path, capsys):
         pytest.skip("Sample XML not found")
 
     # Mock sys.argv
-    monkeypatch.setattr(sys, 'argv', [
-        'pi_grapheion',
-        'extract',
-        str(xml_path),
-        '2a',
-        '--print'
-    ])
+    monkeypatch.setattr(
+        sys, "argv", ["pi_grapheion", "extract", str(xml_path), "2a", "--print"]
+    )
 
     # Run CLI
     try:
@@ -39,13 +37,9 @@ def test_cli_extract_with_invalid_range(monkeypatch, tmp_path, capsys):
     if not xml_path.exists():
         pytest.skip("Sample XML not found")
 
-    monkeypatch.setattr(sys, 'argv', [
-        'pi_grapheion',
-        'extract',
-        str(xml_path),
-        '999z',
-        '--print'
-    ])
+    monkeypatch.setattr(
+        sys, "argv", ["pi_grapheion", "extract", str(xml_path), "999z", "--print"]
+    )
 
     # Should exit with error
     with pytest.raises(SystemExit) as exc_info:
@@ -59,18 +53,25 @@ def test_cli_extract_with_invalid_range(monkeypatch, tmp_path, capsys):
 def test_cli_extract_plato_euthyphro_range(monkeypatch, capsys):
     """Test extracting a range from Plato's Euthyphro."""
     # Use real Perseus file if available
-    xml_path = Path("canonical-greekLit/data/tlg0059/tlg001/tlg0059.tlg001.perseus-grc2.xml")
+    xml_path = Path(
+        "canonical-greekLit/data/tlg0059/tlg001/tlg0059.tlg001.perseus-grc2.xml"
+    )
     if not xml_path.exists():
         pytest.skip("Plato's Euthyphro not found in canonical-greekLit")
 
-    monkeypatch.setattr(sys, 'argv', [
-        'pi_grapheion',
-        'extract',
-        'tlg0059.tlg001',
-        '2a-2b',
-        '--print',
-        '--style', 'C'  # No punctuation for easier testing
-    ])
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "pi_grapheion",
+            "extract",
+            "tlg0059.tlg001",
+            "2a-2b",
+            "--print",
+            "--style",
+            "C",  # No punctuation for easier testing
+        ],
+    )
 
     try:
         main()
@@ -87,17 +88,17 @@ def test_cli_extract_plato_euthyphro_range(monkeypatch, capsys):
 
 def test_cli_extract_page_range(monkeypatch, capsys):
     """Test extracting a full page range."""
-    xml_path = Path("canonical-greekLit/data/tlg0059/tlg001/tlg0059.tlg001.perseus-grc2.xml")
+    xml_path = Path(
+        "canonical-greekLit/data/tlg0059/tlg001/tlg0059.tlg001.perseus-grc2.xml"
+    )
     if not xml_path.exists():
         pytest.skip("Plato's Euthyphro not found")
 
-    monkeypatch.setattr(sys, 'argv', [
-        'pi_grapheion',
-        'extract',
-        'tlg0059.tlg001',
-        '2',  # Just page 2
-        '--print'
-    ])
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["pi_grapheion", "extract", "tlg0059.tlg001", "2", "--print"],  # Just page 2
+    )
 
     try:
         main()
@@ -111,13 +112,11 @@ def test_cli_extract_page_range(monkeypatch, capsys):
 
 def test_cli_extract_anthology_single_work(monkeypatch, capsys):
     """Test anthology extraction from single work with multiple ranges."""
-    monkeypatch.setattr(sys, 'argv', [
-        'pi_grapheion',
-        'extract',
-        'euthyphro',
-        '--passages', '5a,7b-7c',
-        '--print'
-    ])
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["pi_grapheion", "extract", "euthyphro", "--passages", "5a,7b-7c", "--print"],
+    )
 
     try:
         main()
@@ -134,15 +133,21 @@ def test_cli_extract_anthology_single_work(monkeypatch, capsys):
 
 def test_cli_extract_anthology_multiple_works(monkeypatch, capsys):
     """Test anthology extraction from multiple works."""
-    monkeypatch.setattr(sys, 'argv', [
-        'pi_grapheion',
-        'extract',
-        'euthyphro',
-        '--passages', '5a',
-        'republic',
-        '--passages', '354b',
-        '--print'
-    ])
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "pi_grapheion",
+            "extract",
+            "euthyphro",
+            "--passages",
+            "5a",
+            "republic",
+            "--passages",
+            "354b",
+            "--print",
+        ],
+    )
 
     try:
         main()

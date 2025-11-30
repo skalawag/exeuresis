@@ -1,15 +1,11 @@
 """Tests for anthology data structures."""
 
-import pytest
-from exeuresis.anthology_extractor import PassageSpec, AnthologyBlock
+from exeuresis.anthology_extractor import AnthologyBlock, PassageSpec
 
 
 def test_passage_spec_creation():
     """Test creating PassageSpec."""
-    spec = PassageSpec(
-        work_id="tlg0059.tlg001",
-        ranges=["5a", "7b-c", "8"]
-    )
+    spec = PassageSpec(work_id="tlg0059.tlg001", ranges=["5a", "7b-c", "8"])
     assert spec.work_id == "tlg0059.tlg001"
     assert spec.ranges == ["5a", "7b-c", "8"]
 
@@ -21,7 +17,7 @@ def test_anthology_block_creation():
         work_title_gr="Εὐθύφρων",
         range_display="5a",
         segments=[{"text": "Sample", "stephanus": ["5a"]}],
-        book=None
+        book=None,
     )
     assert block.work_title_en == "Euthyphro"
     assert block.work_title_gr == "Εὐθύφρων"
@@ -36,7 +32,7 @@ def test_anthology_block_format_header_no_book():
         work_title_gr="Εὐθύφρων",
         range_display="5a",
         segments=[],
-        book=None
+        book=None,
     )
     header = block.format_header(width=79)
 
@@ -51,7 +47,7 @@ def test_anthology_block_format_header_with_book():
         work_title_gr="Πολιτεία",
         range_display="354b-c",
         segments=[],
-        book="1"
+        book="1",
     )
     header = block.format_header(width=79)
 

@@ -4,20 +4,25 @@ This document outlines likely and useful future directions for `exeuresis`. Item
 
 ---
 
+### Completed Features
+
+- ✅ **Corpus health checks** (Milestone 1)
+  - Added `list-corpora --details` to show health status for each corpus
+  - Implemented `check-corpus` subcommand with `--quick` and `--full` modes
+  - Quick mode samples a percentage of files; full mode checks all files
+  - Reports parse failures, metadata issues, and overall health status
+
+- ✅ **Structured output formats (JSON/JSONL)** (Milestone 1)
+  - Added `--format {text,json,jsonl}` flag for `extract` command
+  - `text`: default behavior (backward compatible)
+  - `json`: outputs JSON array with metadata wrapper (work_id, title, timestamp)
+  - `jsonl`: outputs newline-delimited JSON (one segment per line)
+  - Works with both single extraction and anthology modes
+  - Segment schema: `{speaker, label, text, stephanus[], said_id, is_paragraph_start, book}`
+
+---
+
 ### Milestone 1 – Diagnostics & Data Formats (Near‑Term, High ROI)
-
-- **Corpus health checks**
-  - Extend `list-corpora` with a `--details` (or `--verbose`) option to show name, path, description, and a simple health status (OK / warning / error).
-  - Add a `check-corpus` subcommand, e.g. `exeuresis.cli check-corpus [--corpus NAME] [--quick | --full]`.
-    - Quick mode: verify corpus directory exists and is readable; sample a small number of TEI files and ensure they parse.
-    - Full mode: walk a curated subset of works (not the whole tree), count parse failures, and highlight missing or malformed metadata.
-
-- **Structured output formats (JSON/JSONL)**
-  - Add a `--format` flag for `extract` (and anthology extraction): `--format {text,json,jsonl}`.
-    - `text`: current default behavior.
-    - `json`: a JSON array of segments.
-    - `jsonl`: one JSON object per segment per line.
-  - Reuse the existing segment schema; ensure it is serializable and stable enough for downstream tools (NLP, notebooks, pipelines).
 
 - **Richer catalog exploration**
   - Extend `list-authors` and `list-works` with:

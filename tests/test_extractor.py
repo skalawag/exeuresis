@@ -1,7 +1,7 @@
 """Tests for text extraction functionality."""
 
-from pathlib import Path
 import textwrap
+from pathlib import Path
 
 import pytest
 
@@ -60,8 +60,8 @@ class TestTextExtractor:
 
     def test_extract_dialogue_text(self, sample_xml_path):
         """Test 4: Should extract text from <said> elements."""
-        from exeuresis.parser import TEIParser
         from exeuresis.extractor import TextExtractor
+        from exeuresis.parser import TEIParser
 
         parser = TEIParser(sample_xml_path)
         extractor = TextExtractor(parser)
@@ -81,8 +81,8 @@ class TestTextExtractor:
 
     def test_extract_speaker_labels(self, sample_xml_path):
         """Test 5: Should extract speaker labels (ΕΥΘ., ΣΩ.)."""
-        from exeuresis.parser import TEIParser
         from exeuresis.extractor import TextExtractor
+        from exeuresis.parser import TEIParser
 
         parser = TEIParser(sample_xml_path)
         extractor = TextExtractor(parser)
@@ -95,8 +95,8 @@ class TestTextExtractor:
 
     def test_extract_stephanus_numbers(self, sample_xml_path):
         """Test 6: Should extract Stephanus pagination markers."""
-        from exeuresis.parser import TEIParser
         from exeuresis.extractor import TextExtractor
+        from exeuresis.parser import TEIParser
 
         parser = TEIParser(sample_xml_path)
         extractor = TextExtractor(parser)
@@ -111,8 +111,8 @@ class TestTextExtractor:
 
     def test_extract_handles_inline_comments(self, tmp_path):
         """Regression: inline XML comments should not break extraction."""
-        from exeuresis.parser import TEIParser
         from exeuresis.extractor import TextExtractor
+        from exeuresis.parser import TEIParser
 
         xml_content = textwrap.dedent(
             """<?xml version=\"1.0\" encoding=\"UTF-8\"?>
@@ -141,8 +141,8 @@ class TestTextExtractor:
         """Test 7: Should handle editorial markup like <del> tags."""
         # We'll create a fixture with <del> tags for this test
         # For now, test basic text extraction without errors
-        from exeuresis.parser import TEIParser
         from exeuresis.extractor import TextExtractor
+        from exeuresis.parser import TEIParser
 
         parser = TEIParser(sample_xml_path)
         extractor = TextExtractor(parser)
@@ -153,8 +153,8 @@ class TestTextExtractor:
 
     def test_maintain_dialogue_order(self, sample_xml_path):
         """Test that dialogue text is extracted in document order."""
-        from exeuresis.parser import TEIParser
         from exeuresis.extractor import TextExtractor
+        from exeuresis.parser import TEIParser
 
         parser = TEIParser(sample_xml_path)
         extractor = TextExtractor(parser)
@@ -167,8 +167,8 @@ class TestTextExtractor:
 
     def test_extract_from_real_euthyphro(self, euthyphro_xml_path):
         """Test extraction from the actual Euthyphro XML file."""
-        from exeuresis.parser import TEIParser
         from exeuresis.extractor import TextExtractor
+        from exeuresis.parser import TEIParser
 
         if not euthyphro_xml_path.exists():
             pytest.skip("Euthyphro XML file not found")
@@ -190,9 +190,9 @@ class TestTextExtractor:
 
     def test_extract_from_empty_file_raises_error(self):
         """Test that extractor raises EmptyExtractionError for file with no extractable text."""
-        from exeuresis.parser import TEIParser
-        from exeuresis.extractor import TextExtractor
         from exeuresis.exceptions import EmptyExtractionError
+        from exeuresis.extractor import TextExtractor
+        from exeuresis.parser import TEIParser
 
         empty_xml = Path(__file__).parent / "fixtures" / "invalid" / "empty_text.xml"
 
@@ -207,8 +207,8 @@ class TestTextExtractor:
 
     def test_extract_plutarch_stephpage_markers(self, plutarch_xml_path):
         """Test extraction of Plutarch texts with stephpage pagination markers."""
-        from exeuresis.parser import TEIParser
         from exeuresis.extractor import TextExtractor
+        from exeuresis.parser import TEIParser
 
         if not plutarch_xml_path.exists():
             pytest.skip("Plutarch XML file not found")
@@ -230,16 +230,24 @@ class TestTextExtractor:
 
         # Find entries with stephpage markers
         entries_with_markers = [e for e in text_entries if e["stephanus"]]
-        assert len(entries_with_markers) > 0, "Should have entries with stephpage markers"
+        assert (
+            len(entries_with_markers) > 0
+        ), "Should have entries with stephpage markers"
 
         # Check that markers are in expected format (e.g., "1012b", "1012c", etc.)
-        all_markers = [marker for e in entries_with_markers for marker in e["stephanus"]]
-        assert any("1012" in marker for marker in all_markers), "Should contain 1012 series markers"
+        all_markers = [
+            marker for e in entries_with_markers for marker in e["stephanus"]
+        ]
+        assert any(
+            "1012" in marker for marker in all_markers
+        ), "Should contain 1012 series markers"
 
-    def test_stephanus_marker_types_support(self, euthyphro_xml_path, plutarch_xml_path):
+    def test_stephanus_marker_types_support(
+        self, euthyphro_xml_path, plutarch_xml_path
+    ):
         """Test that both unit='section' (Plato) and unit='stephpage' (Plutarch) are supported."""
-        from exeuresis.parser import TEIParser
         from exeuresis.extractor import TextExtractor
+        from exeuresis.parser import TEIParser
 
         if not euthyphro_xml_path.exists() or not plutarch_xml_path.exists():
             pytest.skip("Required XML files not found")
@@ -251,21 +259,29 @@ class TestTextExtractor:
         plato_markers = [marker for e in plato_entries for marker in e["stephanus"]]
         assert len(plato_markers) > 0, "Should extract section markers from Plato"
         # Plato markers are like "2a", "2b", "3", etc.
-        assert any(marker in ["2a", "2b", "2c", "2d", "3"] for marker in plato_markers[:20])
+        assert any(
+            marker in ["2a", "2b", "2c", "2d", "3"] for marker in plato_markers[:20]
+        )
 
         # Test Plutarch (stephpage markers)
         plutarch_parser = TEIParser(plutarch_xml_path)
         plutarch_extractor = TextExtractor(plutarch_parser)
         plutarch_entries = plutarch_extractor.get_dialogue_text()
-        plutarch_markers = [marker for e in plutarch_entries for marker in e["stephanus"]]
-        assert len(plutarch_markers) > 0, "Should extract stephpage markers from Plutarch"
+        plutarch_markers = [
+            marker for e in plutarch_entries for marker in e["stephanus"]
+        ]
+        assert (
+            len(plutarch_markers) > 0
+        ), "Should extract stephpage markers from Plutarch"
         # Plutarch markers are like "1012b", "1012c", "1013a", etc.
-        assert any("1012" in marker or "1013" in marker for marker in plutarch_markers[:20])
+        assert any(
+            "1012" in marker or "1013" in marker for marker in plutarch_markers[:20]
+        )
 
     def test_extract_section_numbers_from_divs(self, sample_sections_path):
         """Test extraction of section numbers from <div subtype='section'> elements."""
-        from exeuresis.parser import TEIParser
         from exeuresis.extractor import TextExtractor
+        from exeuresis.parser import TEIParser
 
         parser = TEIParser(sample_sections_path)
         extractor = TextExtractor(parser)
@@ -287,8 +303,8 @@ class TestTextExtractor:
 
     def test_extract_from_real_trapeziticus(self, trapeziticus_xml_path):
         """Test extraction from the actual Isocrates Trapeziticus XML file."""
-        from exeuresis.parser import TEIParser
         from exeuresis.extractor import TextExtractor
+        from exeuresis.parser import TEIParser
 
         if not trapeziticus_xml_path.exists():
             pytest.skip("Trapeziticus XML file not found")
@@ -310,7 +326,9 @@ class TestTextExtractor:
 
         # Find entries with section markers
         entries_with_markers = [e for e in text_entries if e["stephanus"]]
-        assert len(entries_with_markers) == 58, "Should have section markers for all sections"
+        assert (
+            len(entries_with_markers) == 58
+        ), "Should have section markers for all sections"
 
         # Check that first few section markers are correct
         assert text_entries[0]["stephanus"] == ["1"]

@@ -1,10 +1,10 @@
 """Text formatting for different output styles."""
 
-from enum import Enum
-from typing import List, Dict, Optional
 import re
 import textwrap
 import unicodedata
+from enum import Enum
+from typing import Dict, List, Optional
 
 
 class OutputStyle(Enum):
@@ -80,7 +80,9 @@ class TextFormatter:
         )
         return "\n".join(lines)
 
-    def _normalize_dashes(self, dialogue_data: List[Dict[str, any]]) -> List[Dict[str, any]]:
+    def _normalize_dashes(
+        self, dialogue_data: List[Dict[str, any]]
+    ) -> List[Dict[str, any]]:
         """
         Replace m-dashes with spaces in dialogue text.
 
@@ -175,7 +177,9 @@ class TextFormatter:
             # Start new paragraph if:
             # 1. We're in a different <said> element, OR
             # 2. This entry is marked as a paragraph start (from <milestone unit="para"/>)
-            if (current_said_id != last_said_id and last_said_id is not None) or is_paragraph_start:
+            if (
+                current_said_id != last_said_id and last_said_id is not None
+            ) or is_paragraph_start:
                 # Finish current paragraph
                 if current_paragraph_parts:
                     paragraph_text = " ".join(current_paragraph_parts)
@@ -222,9 +226,11 @@ class TextFormatter:
             Text with accents removed
         """
         # Normalize to NFD (decomposed form) to separate base letters from accents
-        nfd = unicodedata.normalize('NFD', text)
+        nfd = unicodedata.normalize("NFD", text)
         # Filter out combining diacritical marks (category Mn)
-        without_accents = ''.join(char for char in nfd if unicodedata.category(char) != 'Mn')
+        without_accents = "".join(
+            char for char in nfd if unicodedata.category(char) != "Mn"
+        )
         return without_accents
 
     def _format_book_header(self, book_num: str) -> str:
@@ -239,10 +245,26 @@ class TextFormatter:
         """
         # Greek uppercase numerals
         greek_numerals = {
-            "1": "Α", "2": "Β", "3": "Γ", "4": "Δ", "5": "Ε",
-            "6": "ΣΤ", "7": "Ζ", "8": "Η", "9": "Θ", "10": "Ι",
-            "11": "ΙΑ", "12": "ΙΒ", "13": "ΙΓ", "14": "ΙΔ", "15": "ΙΕ",
-            "16": "ΙΣΤ", "17": "ΙΖ", "18": "ΙΗ", "19": "ΙΘ", "20": "Κ"
+            "1": "Α",
+            "2": "Β",
+            "3": "Γ",
+            "4": "Δ",
+            "5": "Ε",
+            "6": "ΣΤ",
+            "7": "Ζ",
+            "8": "Η",
+            "9": "Θ",
+            "10": "Ι",
+            "11": "ΙΑ",
+            "12": "ΙΒ",
+            "13": "ΙΓ",
+            "14": "ΙΔ",
+            "15": "ΙΕ",
+            "16": "ΙΣΤ",
+            "17": "ΙΖ",
+            "18": "ΙΗ",
+            "19": "ΙΘ",
+            "20": "Κ",
         }
 
         numeral = greek_numerals.get(book_num, book_num)
@@ -371,9 +393,10 @@ class TextFormatter:
 
         # Remove Greek accents/diacritics
         # Greek combining diacritical marks (Unicode ranges)
-        text_no_accents = unicodedata.normalize('NFD', text_continuous)
-        text_no_accents = ''.join(char for char in text_no_accents
-                                   if unicodedata.category(char) != 'Mn')
+        text_no_accents = unicodedata.normalize("NFD", text_continuous)
+        text_no_accents = "".join(
+            char for char in text_no_accents if unicodedata.category(char) != "Mn"
+        )
 
         # Wrap for readability (or leave continuous if disabled)
         return self._wrap_continuous(text_no_accents, allow_long_words=True)
@@ -413,7 +436,9 @@ class TextFormatter:
             # Start new paragraph if:
             # 1. We're in a different <said> element, OR
             # 2. This entry is marked as a paragraph start (from <milestone unit="para"/>)
-            if (current_said_id != last_said_id and last_said_id is not None) or is_paragraph_start:
+            if (
+                current_said_id != last_said_id and last_said_id is not None
+            ) or is_paragraph_start:
                 # Finish current paragraph
                 if current_paragraph_parts:
                     paragraph_text = " ".join(current_paragraph_parts)
@@ -487,7 +512,9 @@ class TextFormatter:
             # Start new paragraph if:
             # 1. We're in a different <said> element, OR
             # 2. This entry is marked as a paragraph start (from <milestone unit="para"/>)
-            if (current_said_id != last_said_id and last_said_id is not None) or is_paragraph_start:
+            if (
+                current_said_id != last_said_id and last_said_id is not None
+            ) or is_paragraph_start:
                 # Finish current paragraph
                 if current_paragraph_parts:
                     paragraph_text = " ".join(current_paragraph_parts)
@@ -547,10 +574,11 @@ class TextFormatter:
             author_id = self.parser.get_author_id()
             if author_id and author_id != "tlg0059":
                 from exeuresis.exceptions import InvalidStyleError
+
                 raise InvalidStyleError(
                     "S (Stephanus layout)",
                     "This style is only valid for Plato's works (tlg0059). "
-                    "Stephanus pagination refers to the 1578 edition of Plato by Henri Estienne (Stephanus)."
+                    "Stephanus pagination refers to the 1578 edition of Plato by Henri Estienne (Stephanus).",
                 )
 
         if not self.dialogue_data:
@@ -592,10 +620,7 @@ class TextFormatter:
                 if stephanus:
                     marker = self._format_stephanus_marker(stephanus)
 
-                result.append({
-                    "text": text,
-                    "marker": marker
-                })
+                result.append({"text": text, "marker": marker})
             return result
 
         # Use the extractor to get properly split text
@@ -610,14 +635,13 @@ class TextFormatter:
             if stephanus:
                 marker = self._format_stephanus_marker(stephanus)
 
-            result.append({
-                "text": text,
-                "marker": marker
-            })
+            result.append({"text": text, "marker": marker})
 
         return result
 
-    def _format_with_margin_markers(self, text_with_markers: List[Dict[str, any]]) -> str:
+    def _format_with_margin_markers(
+        self, text_with_markers: List[Dict[str, any]]
+    ) -> str:
         """
         Format text with markers in the left margin.
 
@@ -648,9 +672,14 @@ class TextFormatter:
                 if accumulated_text and pending_marker:
                     # We have pending marker - wrap and output first line with it
                     wrapped = textwrap.wrap(
-                        accumulated_text, width=column_width, break_long_words=False, break_on_hyphens=False
+                        accumulated_text,
+                        width=column_width,
+                        break_long_words=False,
+                        break_on_hyphens=False,
                     )
-                    output_lines.append(f"{pending_marker:>{margin_width}} {wrapped[0]}")
+                    output_lines.append(
+                        f"{pending_marker:>{margin_width}} {wrapped[0]}"
+                    )
                     # Output remaining lines
                     for line in wrapped[1:]:
                         output_lines.append(f"{' ' * margin_width} {line}")
@@ -659,7 +688,10 @@ class TextFormatter:
                 elif accumulated_text:
                     # No pending marker - just output accumulated text
                     wrapped = textwrap.wrap(
-                        accumulated_text, width=column_width, break_long_words=False, break_on_hyphens=False
+                        accumulated_text,
+                        width=column_width,
+                        break_long_words=False,
+                        break_on_hyphens=False,
                     )
                     for line in wrapped:
                         output_lines.append(f"{' ' * margin_width} {line}")
@@ -679,7 +711,10 @@ class TextFormatter:
         if pending_marker and accumulated_text:
             # Final text with pending marker - wrap it properly
             wrapped = textwrap.wrap(
-                accumulated_text, width=column_width, break_long_words=False, break_on_hyphens=False
+                accumulated_text,
+                width=column_width,
+                break_long_words=False,
+                break_on_hyphens=False,
             )
             if wrapped:
                 output_lines.append(f"{pending_marker:>{margin_width}} {wrapped[0]}")
@@ -688,7 +723,10 @@ class TextFormatter:
         elif accumulated_text:
             # Final text without marker
             wrapped = textwrap.wrap(
-                accumulated_text, width=column_width, break_long_words=False, break_on_hyphens=False
+                accumulated_text,
+                width=column_width,
+                break_long_words=False,
+                break_on_hyphens=False,
             )
             for line in wrapped:
                 output_lines.append(f"{' ' * margin_width} {line}")
@@ -750,7 +788,9 @@ class TextFormatter:
 
         return None
 
-    def _format_all_stephanus_with_context(self, stephanus_list: List[str], last_page_num: str) -> List[str]:
+    def _format_all_stephanus_with_context(
+        self, stephanus_list: List[str], last_page_num: str
+    ) -> List[str]:
         """
         Format ALL Stephanus markers in a list with context awareness.
 
@@ -782,7 +822,9 @@ class TextFormatter:
 
         return formatted_markers
 
-    def _format_single_marker_with_context(self, marker: str, last_page_num: str) -> str:
+    def _format_single_marker_with_context(
+        self, marker: str, last_page_num: str
+    ) -> str:
         """
         Format a single Stephanus marker with context awareness.
 
@@ -806,7 +848,7 @@ class TextFormatter:
             if last_page_num and current_page == last_page_num:
                 return f"[{letter}]"
             # If it's 'a' (first section), show the full page number
-            elif letter == 'a':
+            elif letter == "a":
                 return f"[{current_page}]"
             # Otherwise show just the letter (subsequent section)
             else:
@@ -815,7 +857,9 @@ class TextFormatter:
         # Fallback
         return f"[{marker}]"
 
-    def _format_stephanus_with_context(self, stephanus_list: List[str], last_page_num: str) -> str:
+    def _format_stephanus_with_context(
+        self, stephanus_list: List[str], last_page_num: str
+    ) -> str:
         """
         Format Stephanus marker with awareness of previous page number.
 
@@ -832,10 +876,12 @@ class TextFormatter:
         # Check if this is a first section (has both page number and page+a)
         # Example: ["2", "2a"] or ["3", "3a"]
         # Key: First element must be pure number, second must be number+a
-        if (len(stephanus_list) >= 2 and
-            stephanus_list[0].isdigit() and
-            len(stephanus_list[1]) > 1 and
-            stephanus_list[1][-1] == 'a'):
+        if (
+            len(stephanus_list) >= 2
+            and stephanus_list[0].isdigit()
+            and len(stephanus_list[1]) > 1
+            and stephanus_list[1][-1] == "a"
+        ):
             # This is the first section - just show the page number
             page_num = stephanus_list[0]
             return f"[{page_num}]"
@@ -855,7 +901,7 @@ class TextFormatter:
             # If this is the first marker (no previous context)
             if last_page_num is None:
                 # If it's 'a', show just the page number (Plato convention)
-                if letter == 'a':
+                if letter == "a":
                     return f"[{current_page}]"
                 # Otherwise show the full marker (e.g., [1012b] for Plutarch)
                 else:
@@ -864,7 +910,7 @@ class TextFormatter:
             elif current_page == last_page_num:
                 return f"[{letter}]"
             # If it's 'a' (first section of a new page), show the full page number
-            elif letter == 'a':
+            elif letter == "a":
                 return f"[{current_page}]"
             # Otherwise show the full marker (transitioning to new page with non-'a')
             else:

@@ -3,6 +3,7 @@
 
 class PerseusError(Exception):
     """Base exception for all Perseus-related errors."""
+
     pass
 
 

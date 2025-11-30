@@ -1,6 +1,5 @@
 """Tests for custom exceptions."""
 
-import pytest
 from exeuresis.exceptions import InvalidStephanusRangeError
 
 
@@ -16,9 +15,7 @@ def test_invalid_stephanus_range_error_basic():
 def test_invalid_stephanus_range_error_with_reason():
     """Test InvalidStephanusRangeError with detailed reason."""
     error = InvalidStephanusRangeError(
-        "tlg0059.tlg001",
-        "5a-3c",
-        "Start marker (5a) comes after end marker (3c)"
+        "tlg0059.tlg001", "5a-3c", "Start marker (5a) comes after end marker (3c)"
     )
     assert "5a-3c" in str(error)
     assert "Start marker" in str(error)

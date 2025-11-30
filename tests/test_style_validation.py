@@ -1,11 +1,13 @@
 """Tests for output style validation."""
 
-import pytest
 from pathlib import Path
-from exeuresis.parser import TEIParser
-from exeuresis.extractor import TextExtractor
-from exeuresis.formatter import TextFormatter, OutputStyle
+
+import pytest
+
 from exeuresis.exceptions import InvalidStyleError
+from exeuresis.extractor import TextExtractor
+from exeuresis.formatter import OutputStyle, TextFormatter
+from exeuresis.parser import TEIParser
 
 
 class TestStyleValidation:

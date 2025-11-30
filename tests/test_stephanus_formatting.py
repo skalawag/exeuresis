@@ -1,7 +1,6 @@
 """Tests for Stephanus pagination formatting and text wrapping."""
 
-import pytest
-from exeuresis.formatter import TextFormatter, OutputStyle
+from exeuresis.formatter import OutputStyle, TextFormatter
 
 
 class TestStephanusFormatting:
@@ -267,9 +266,24 @@ class TestStephanusFormatting:
             {"speaker": "", "label": "", "text": "More text", "stephanus": []},
             {"speaker": "", "label": "", "text": "Page 59c text", "stephanus": ["59c"]},
             {"speaker": "", "label": "", "text": "Page 59e text", "stephanus": ["59e"]},
-            {"speaker": "", "label": "", "text": "Page 60 all sections", "stephanus": ["60a", "60b", "60c", "60d", "60e"]},
-            {"speaker": "", "label": "", "text": "Page 61 all sections", "stephanus": ["61a", "61b", "61c", "61d", "61e"]},
-            {"speaker": "", "label": "", "text": "Page 62 all sections", "stephanus": ["62a", "62b", "62c", "62d", "62e"]},
+            {
+                "speaker": "",
+                "label": "",
+                "text": "Page 60 all sections",
+                "stephanus": ["60a", "60b", "60c", "60d", "60e"],
+            },
+            {
+                "speaker": "",
+                "label": "",
+                "text": "Page 61 all sections",
+                "stephanus": ["61a", "61b", "61c", "61d", "61e"],
+            },
+            {
+                "speaker": "",
+                "label": "",
+                "text": "Page 62 all sections",
+                "stephanus": ["62a", "62b", "62c", "62d", "62e"],
+            },
         ]
 
         formatter = TextFormatter(dialogue_data)

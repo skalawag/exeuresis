@@ -2,7 +2,8 @@
 
 import logging
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Optional
+
 from lxml import etree
 
 from exeuresis.config import get_corpus_path, get_default_corpus_name
@@ -121,9 +122,7 @@ class PerseusCatalog:
                         name_en = elem.text.strip()
 
                 if name_en:
-                    authors.append(
-                        PerseusAuthor(author_dir.name, name_en, name_grc)
-                    )
+                    authors.append(PerseusAuthor(author_dir.name, name_en, name_grc))
             except Exception as e:
                 # Skip authors with malformed metadata
                 logger.warning(
@@ -198,7 +197,12 @@ class PerseusCatalog:
 
                     works.append(
                         PerseusWork(
-                            tlg_id, work_dir.name, title_en, title_grc, file_path, page_range
+                            tlg_id,
+                            work_dir.name,
+                            title_en,
+                            title_grc,
+                            file_path,
+                            page_range,
                         )
                     )
             except Exception as e:
@@ -288,8 +292,10 @@ class PerseusCatalog:
         matches = []
 
         for author in self.list_authors():
-            if (name_lower == author.name_en.lower() or
-                name_lower == author.name_grc.lower()):
+            if (
+                name_lower == author.name_en.lower()
+                or name_lower == author.name_grc.lower()
+            ):
                 matches.append(author.tlg_id)
 
         # Return match if exactly one found, None if ambiguous or not found
@@ -316,13 +322,12 @@ class PerseusCatalog:
             # Plato uses unit="section", Plutarch uses unit="stephpage"
             milestones = root.xpath(
                 "//tei:milestone[@unit='section' or @unit='stephpage']/@n",
-                namespaces=NS
+                namespaces=NS,
             )
 
             # Also find section divs (Isocrates and other authors use these)
             section_divs = root.xpath(
-                "//tei:div[@type='textpart' and @subtype='section']/@n",
-                namespaces=NS
+                "//tei:div[@type='textpart' and @subtype='section']/@n", namespaces=NS
             )
 
             # Combine both types
@@ -381,7 +386,7 @@ class PerseusCatalog:
         if len(parts) != 2:
             raise WorkNotFoundError(
                 work_id,
-                "Work ID must be in format 'tlg####.tlg###' (e.g., tlg0059.tlg001)"
+                "Work ID must be in format 'tlg####.tlg###' (e.g., tlg0059.tlg001)",
             )
 
         author_id, work_num = parts
@@ -389,8 +394,7 @@ class PerseusCatalog:
         # Validate IDs start with "tlg"
         if not author_id.startswith("tlg") or not work_num.startswith("tlg"):
             raise WorkNotFoundError(
-                work_id,
-                "Both author and work must start with 'tlg'"
+                work_id, "Both author and work must start with 'tlg'"
             )
 
         # Check if author exists
@@ -398,7 +402,7 @@ class PerseusCatalog:
         if not author:
             raise WorkNotFoundError(
                 work_id,
-                f"Author '{author_id}' not found. Use 'list-authors' to see available authors."
+                f"Author '{author_id}' not found. Use 'list-authors' to see available authors.",
             )
 
         # Get works for this author
@@ -411,13 +415,12 @@ class PerseusCatalog:
                     return work.file_path
                 else:
                     raise WorkNotFoundError(
-                        work_id,
-                        f"Work found but no Greek edition file available"
+                        work_id, "Work found but no Greek edition file available"
                     )
 
         # Work not found - provide helpful suggestion
         raise WorkNotFoundError(
             work_id,
             f"Work '{work_num}' not found for author {author.name_en}.\n"
-            f"Use 'list-works {author_id}' to see available works."
+            f"Use 'list-works {author_id}' to see available works.",
         )

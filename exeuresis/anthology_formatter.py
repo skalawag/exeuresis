@@ -3,8 +3,8 @@
 from typing import List, Optional
 
 from exeuresis.anthology_extractor import AnthologyBlock
-from exeuresis.formatter import OutputStyle, TextFormatter
 from exeuresis.exceptions import InvalidStyleError
+from exeuresis.formatter import OutputStyle, TextFormatter
 
 
 class AnthologyFormatter:
@@ -25,13 +25,13 @@ class AnthologyFormatter:
             raise InvalidStyleError(
                 "E",
                 "Style E (scriptio continua) is not supported for anthology extraction. "
-                "Use styles A-D only."
+                "Use styles A-D only.",
             )
         if style == OutputStyle.STEPHANUS_LAYOUT:
             raise InvalidStyleError(
                 "S",
                 "Style S (Stephanus layout) is not supported for anthology extraction. "
-                "Use styles A-D only."
+                "Use styles A-D only.",
             )
 
         self.style = style

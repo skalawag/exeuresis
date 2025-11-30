@@ -1,7 +1,8 @@
 """Tests for text formatting functionality."""
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 # from exeuresis.formatter import TextFormatter, OutputStyle
 
@@ -35,7 +36,7 @@ class TestTextFormatter:
 
     def test_style_a_full_modern_edition(self, sample_dialogue_data):
         """Test 8: Style A should preserve all punctuation and apparatus."""
-        from exeuresis.formatter import TextFormatter, OutputStyle
+        from exeuresis.formatter import OutputStyle, TextFormatter
 
         formatter = TextFormatter(sample_dialogue_data)
         output = formatter.format(OutputStyle.FULL_MODERN)
@@ -59,7 +60,7 @@ class TestTextFormatter:
 
     def test_style_a_paragraph_formatting(self, sample_dialogue_data):
         """Test 9: Style A should create readable paragraphs."""
-        from exeuresis.formatter import TextFormatter, OutputStyle
+        from exeuresis.formatter import OutputStyle, TextFormatter
 
         formatter = TextFormatter(sample_dialogue_data)
         output = formatter.format(OutputStyle.FULL_MODERN)
@@ -70,13 +71,15 @@ class TestTextFormatter:
 
     def test_style_a_custom_wrap_width(self, sample_dialogue_data):
         """Style A should honor custom wrap width."""
-        from exeuresis.formatter import TextFormatter, OutputStyle
+        from exeuresis.formatter import OutputStyle, TextFormatter
 
         formatter = TextFormatter(sample_dialogue_data, wrap_width=20)
         output = formatter.format(OutputStyle.FULL_MODERN)
 
         first_paragraph = output.strip().split("\n\n")[0]
-        assert any(len(line) <= 20 for line in first_paragraph.splitlines() if line.strip())
+        assert any(
+            len(line) <= 20 for line in first_paragraph.splitlines() if line.strip()
+        )
 
         formatter_no_wrap = TextFormatter(sample_dialogue_data, wrap_width=None)
         output_no_wrap = formatter_no_wrap.format(OutputStyle.FULL_MODERN)
@@ -85,7 +88,7 @@ class TestTextFormatter:
 
     def test_style_d_scriptio_continua(self, sample_dialogue_data):
         """Test 10-12: Style D should produce uppercase continuous text."""
-        from exeuresis.formatter import TextFormatter, OutputStyle
+        from exeuresis.formatter import OutputStyle, TextFormatter
 
         formatter = TextFormatter(sample_dialogue_data)
         output = formatter.format(OutputStyle.SCRIPTIO_CONTINUA)
@@ -114,7 +117,7 @@ class TestTextFormatter:
 
     def test_style_d_removes_word_boundaries(self, sample_dialogue_data):
         """Test 11: Style D should remove spaces between words."""
-        from exeuresis.formatter import TextFormatter, OutputStyle
+        from exeuresis.formatter import OutputStyle, TextFormatter
 
         formatter = TextFormatter(sample_dialogue_data)
         output = formatter.format(OutputStyle.SCRIPTIO_CONTINUA)
@@ -135,7 +138,7 @@ class TestTextFormatter:
 
     def test_format_empty_dialogue(self):
         """Test formatting with empty dialogue list."""
-        from exeuresis.formatter import TextFormatter, OutputStyle
+        from exeuresis.formatter import OutputStyle, TextFormatter
 
         formatter = TextFormatter([])
         output = formatter.format(OutputStyle.FULL_MODERN)
@@ -145,7 +148,7 @@ class TestTextFormatter:
 
     def test_format_with_missing_stephanus(self):
         """Test formatting dialogue entries that have no Stephanus markers."""
-        from exeuresis.formatter import TextFormatter, OutputStyle
+        from exeuresis.formatter import OutputStyle, TextFormatter
 
         dialogue_data = [
             {
@@ -165,9 +168,9 @@ class TestTextFormatter:
 
     def test_integration_full_pipeline(self):
         """Test 22: End-to-end test with actual Euthyphro XML."""
-        from exeuresis.parser import TEIParser
         from exeuresis.extractor import TextExtractor
-        from exeuresis.formatter import TextFormatter, OutputStyle
+        from exeuresis.formatter import OutputStyle, TextFormatter
+        from exeuresis.parser import TEIParser
 
         euthyphro_path = (
             Path(__file__).parent.parent
@@ -203,7 +206,7 @@ class TestTextFormatter:
 
     def test_style_b_minimal_punctuation(self, sample_dialogue_data):
         """Test Style B: Minimal punctuation (periods and question marks only)."""
-        from exeuresis.formatter import TextFormatter, OutputStyle
+        from exeuresis.formatter import OutputStyle, TextFormatter
 
         formatter = TextFormatter(sample_dialogue_data)
         output = formatter.format(OutputStyle.MINIMAL_PUNCTUATION)
@@ -217,7 +220,7 @@ class TestTextFormatter:
 
     def test_style_c_no_punctuation(self, sample_dialogue_data):
         """Test Style C: No punctuation but preserves labels and spacing."""
-        from exeuresis.formatter import TextFormatter, OutputStyle
+        from exeuresis.formatter import OutputStyle, TextFormatter
 
         formatter = TextFormatter(sample_dialogue_data)
         output = formatter.format(OutputStyle.NO_PUNCTUATION)
@@ -230,7 +233,7 @@ class TestTextFormatter:
 
     def test_style_e_scriptio_continua(self, sample_dialogue_data):
         """Test Style E: Ancient scriptio continua format."""
-        from exeuresis.formatter import TextFormatter, OutputStyle
+        from exeuresis.formatter import OutputStyle, TextFormatter
 
         formatter = TextFormatter(sample_dialogue_data)
         output = formatter.format(OutputStyle.SCRIPTIO_CONTINUA)
@@ -244,11 +247,13 @@ class TestTextFormatter:
 
     def test_scriptio_wrap_controls(self, sample_dialogue_data):
         """Scriptio continua should follow wrap width settings."""
-        from exeuresis.formatter import TextFormatter, OutputStyle
+        from exeuresis.formatter import OutputStyle, TextFormatter
 
         formatter_wrapped = TextFormatter(sample_dialogue_data, wrap_width=10)
         wrapped_output = formatter_wrapped.format(OutputStyle.SCRIPTIO_CONTINUA)
-        assert all(len(line) <= 10 for line in wrapped_output.splitlines() if line.strip())
+        assert all(
+            len(line) <= 10 for line in wrapped_output.splitlines() if line.strip()
+        )
 
         formatter_unwrapped = TextFormatter(sample_dialogue_data, wrap_width=None)
         unwrapped_output = formatter_unwrapped.format(OutputStyle.SCRIPTIO_CONTINUA)
@@ -256,7 +261,7 @@ class TestTextFormatter:
 
     def test_style_s_stephanus_layout(self, sample_dialogue_data):
         """Test Style S: Stephanus 1578 edition layout."""
-        from exeuresis.formatter import TextFormatter, OutputStyle
+        from exeuresis.formatter import OutputStyle, TextFormatter
 
         formatter = TextFormatter(sample_dialogue_data)
         output = formatter.format(OutputStyle.STEPHANUS_LAYOUT)
@@ -269,7 +274,7 @@ class TestTextFormatter:
 
     def test_all_styles_produce_output(self, sample_dialogue_data):
         """Test that all output styles produce valid output."""
-        from exeuresis.formatter import TextFormatter, OutputStyle
+        from exeuresis.formatter import OutputStyle, TextFormatter
 
         formatter = TextFormatter(sample_dialogue_data)
 

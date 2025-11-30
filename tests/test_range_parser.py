@@ -1,6 +1,7 @@
 """Tests for range list parsing."""
 
 import pytest
+
 from exeuresis.anthology_extractor import parse_range_list
 
 

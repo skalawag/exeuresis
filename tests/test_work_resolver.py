@@ -1,9 +1,10 @@
 """Tests for work name resolution and aliases."""
 
+
 import pytest
-from pathlib import Path
-from exeuresis.work_resolver import WorkResolver
+
 from exeuresis.exceptions import WorkNotFoundError
+from exeuresis.work_resolver import WorkResolver
 
 
 class TestWorkResolver:
@@ -47,11 +48,13 @@ class TestWorkResolver:
         """Test user-defined aliases from config file."""
         # Create test config
         config_file = tmp_path / "aliases.yaml"
-        config_file.write_text("""
+        config_file.write_text(
+            """
 aliases:
   euth: tlg0059.tlg001
   rep: tlg0059.tlg030
-""")
+"""
+        )
 
         resolver = WorkResolver(config_path=config_file)
         assert resolver.resolve("euth") == "tlg0059.tlg001"
@@ -60,20 +63,23 @@ aliases:
     def test_project_config_overrides_user_config(self, tmp_path):
         """Test project config overrides user config."""
         user_config = tmp_path / "user_aliases.yaml"
-        user_config.write_text("""
+        user_config.write_text(
+            """
 aliases:
   mywork: tlg0059.tlg001
-""")
+"""
+        )
 
         project_config = tmp_path / "project_aliases.yaml"
-        project_config.write_text("""
+        project_config.write_text(
+            """
 aliases:
   mywork: tlg0059.tlg030  # Override
-""")
+"""
+        )
 
         resolver = WorkResolver(
-            user_config_path=user_config,
-            project_config_path=project_config
+            user_config_path=user_config, project_config_path=project_config
         )
         # Project config should override
         assert resolver.resolve("mywork") == "tlg0059.tlg030"

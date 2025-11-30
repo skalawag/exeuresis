@@ -1,9 +1,10 @@
 """Tests for CLI functionality."""
 
-import pytest
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
+
+import pytest
 
 
 class TestCLIIntegration:
@@ -17,14 +18,14 @@ class TestCLIIntegration:
     @pytest.fixture
     def euthyphro_xml(self):
         """Path to Euthyphro test file."""
-        return Path("canonical-greekLit/data/tlg0059/tlg001/tlg0059.tlg001.perseus-grc1.xml")
+        return Path(
+            "canonical-greekLit/data/tlg0059/tlg001/tlg0059.tlg001.perseus-grc1.xml"
+        )
 
     def test_list_authors(self, cli_command):
         """Test list-authors command."""
         result = subprocess.run(
-            cli_command + ["list-authors"],
-            capture_output=True,
-            text=True
+            cli_command + ["list-authors"], capture_output=True, text=True
         )
 
         assert result.returncode == 0
@@ -35,9 +36,7 @@ class TestCLIIntegration:
     def test_list_works_plato(self, cli_command):
         """Test list-works command for Plato."""
         result = subprocess.run(
-            cli_command + ["list-works", "tlg0059"],
-            capture_output=True,
-            text=True
+            cli_command + ["list-works", "tlg0059"], capture_output=True, text=True
         )
 
         assert result.returncode == 0
@@ -47,9 +46,7 @@ class TestCLIIntegration:
     def test_list_works_by_author_name(self, cli_command):
         """Test list-works command with author name instead of TLG ID."""
         result = subprocess.run(
-            cli_command + ["list-works", "Plato"],
-            capture_output=True,
-            text=True
+            cli_command + ["list-works", "Plato"], capture_output=True, text=True
         )
 
         assert result.returncode == 0
@@ -62,9 +59,7 @@ class TestCLIIntegration:
     def test_list_works_by_author_name_lowercase(self, cli_command):
         """Test list-works with lowercase author name."""
         result = subprocess.run(
-            cli_command + ["list-works", "plato"],
-            capture_output=True,
-            text=True
+            cli_command + ["list-works", "plato"], capture_output=True, text=True
         )
 
         assert result.returncode == 0
@@ -73,9 +68,7 @@ class TestCLIIntegration:
     def test_list_works_invalid_author(self, cli_command):
         """Test list-works with invalid author ID."""
         result = subprocess.run(
-            cli_command + ["list-works", "tlg9999"],
-            capture_output=True,
-            text=True
+            cli_command + ["list-works", "tlg9999"], capture_output=True, text=True
         )
 
         assert result.returncode == 1
@@ -84,9 +77,7 @@ class TestCLIIntegration:
     def test_search_by_title(self, cli_command):
         """Test search command by title."""
         result = subprocess.run(
-            cli_command + ["search", "Euthyphro"],
-            capture_output=True,
-            text=True
+            cli_command + ["search", "Euthyphro"], capture_output=True, text=True
         )
 
         assert result.returncode == 0
@@ -96,9 +87,7 @@ class TestCLIIntegration:
     def test_search_by_author(self, cli_command):
         """Test search command by author name."""
         result = subprocess.run(
-            cli_command + ["search", "Plato"],
-            capture_output=True,
-            text=True
+            cli_command + ["search", "Plato"], capture_output=True, text=True
         )
 
         assert result.returncode == 0
@@ -111,7 +100,7 @@ class TestCLIIntegration:
         result = subprocess.run(
             cli_command + ["search", "NonexistentWork123"],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 0
@@ -124,7 +113,7 @@ class TestCLIIntegration:
         result = subprocess.run(
             cli_command + ["extract", "tlg0059.tlg001", "--output", str(output_file)],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 0
@@ -143,7 +132,7 @@ class TestCLIIntegration:
         result = subprocess.run(
             cli_command + ["extract", str(euthyphro_xml), "--output", str(output_file)],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 0
@@ -157,7 +146,7 @@ class TestCLIIntegration:
         result = subprocess.run(
             cli_command + ["extract", "tlg0059.tlg001", "--print"],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 0
@@ -173,7 +162,9 @@ class TestCLIIntegration:
         )
 
         assert no_wrap.returncode == 0
-        paragraphs_no_wrap = [p for p in no_wrap.stdout.strip().split("\n\n") if p.strip()]
+        paragraphs_no_wrap = [
+            p for p in no_wrap.stdout.strip().split("\n\n") if p.strip()
+        ]
         assert len(paragraphs_no_wrap) >= 2
         assert "\n" not in paragraphs_no_wrap[1]
 
@@ -184,7 +175,9 @@ class TestCLIIntegration:
         )
 
         assert wrapped.returncode == 0
-        paragraphs_wrapped = [p for p in wrapped.stdout.strip().split("\n\n") if p.strip()]
+        paragraphs_wrapped = [
+            p for p in wrapped.stdout.strip().split("\n\n") if p.strip()
+        ]
         assert len(paragraphs_wrapped) >= 2
         assert "\n" in paragraphs_wrapped[1]
 
@@ -193,7 +186,7 @@ class TestCLIIntegration:
         result = subprocess.run(
             cli_command + ["extract", "tlg9999.tlg999", "--print"],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 1
@@ -204,9 +197,17 @@ class TestCLIIntegration:
         output_file = tmp_path / "test_output_styled.txt"
 
         result = subprocess.run(
-            cli_command + ["extract", "tlg0059.tlg001", "--style", "D", "--output", str(output_file)],
+            cli_command
+            + [
+                "extract",
+                "tlg0059.tlg001",
+                "--style",
+                "D",
+                "--output",
+                str(output_file),
+            ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 0
@@ -217,7 +218,7 @@ class TestCLIIntegration:
         result = subprocess.run(
             cli_command + ["extract", "tlg0059.tlg001", "--print", "--verbose"],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 0
@@ -227,9 +228,7 @@ class TestCLIIntegration:
     def test_debug_flag(self, cli_command):
         """Test --debug global flag."""
         result = subprocess.run(
-            cli_command + ["--debug", "list-authors"],
-            capture_output=True,
-            text=True
+            cli_command + ["--debug", "list-authors"], capture_output=True, text=True
         )
 
         assert result.returncode == 0
@@ -238,9 +237,7 @@ class TestCLIIntegration:
     def test_help_output(self, cli_command):
         """Test --help shows usage information."""
         result = subprocess.run(
-            cli_command + ["--help"],
-            capture_output=True,
-            text=True
+            cli_command + ["--help"], capture_output=True, text=True
         )
 
         assert result.returncode == 0
@@ -250,11 +247,7 @@ class TestCLIIntegration:
 
     def test_no_command_shows_help(self, cli_command):
         """Test running with no command shows help."""
-        result = subprocess.run(
-            cli_command,
-            capture_output=True,
-            text=True
-        )
+        result = subprocess.run(cli_command, capture_output=True, text=True)
 
         assert result.returncode == 1
         assert "usage:" in result.stdout.lower()
@@ -265,14 +258,20 @@ class TestCLIIntegration:
 
         # Old style: python -m src.cli <file> without 'extract' subcommand
         result = subprocess.run(
-            cli_command + ["canonical-greekLit/data/tlg0059/tlg001/tlg0059.tlg001.perseus-grc1.xml",
-                          "--output", str(output_file)],
+            cli_command
+            + [
+                "canonical-greekLit/data/tlg0059/tlg001/tlg0059.tlg001.perseus-grc1.xml",
+                "--output",
+                str(output_file),
+            ],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         # Should work via backward compatibility
-        if Path("canonical-greekLit/data/tlg0059/tlg001/tlg0059.tlg001.perseus-grc1.xml").exists():
+        if Path(
+            "canonical-greekLit/data/tlg0059/tlg001/tlg0059.tlg001.perseus-grc1.xml"
+        ).exists():
             assert result.returncode == 0
             assert output_file.exists()
 
@@ -281,7 +280,7 @@ class TestCLIIntegration:
         result = subprocess.run(
             cli_command + ["extract", "euthyphro", "--print"],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 0
@@ -294,14 +293,14 @@ class TestCLIIntegration:
         result_id = subprocess.run(
             cli_command + ["extract", "tlg0059.tlg001", "--print"],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         # Extract using work name alias
         result_alias = subprocess.run(
             cli_command + ["extract", "euthyphro", "--print"],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result_id.returncode == 0

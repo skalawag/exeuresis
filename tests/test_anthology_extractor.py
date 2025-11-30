@@ -1,8 +1,13 @@
 """Tests for anthology extractor core logic."""
 
-import pytest
 from pathlib import Path
-from exeuresis.anthology_extractor import AnthologyExtractor, PassageSpec, AnthologyBlock
+
+import pytest
+
+from exeuresis.anthology_extractor import (
+    AnthologyExtractor,
+    PassageSpec,
+)
 from exeuresis.exceptions import WorkNotFoundError
 
 

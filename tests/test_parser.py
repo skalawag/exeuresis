@@ -1,8 +1,8 @@
 """Tests for TEI XML parser."""
 
-import pytest
 from pathlib import Path
-from lxml import etree
+
+import pytest
 
 # We'll import this once we create it
 # from exeuresis.parser import TEIParser
@@ -79,10 +79,12 @@ class TestTEIParser:
 
     def test_parse_missing_text_element_raises_error(self):
         """Test that parser raises InvalidTEIStructureError for missing <text> element."""
-        from exeuresis.parser import TEIParser
         from exeuresis.exceptions import InvalidTEIStructureError
+        from exeuresis.parser import TEIParser
 
-        invalid_xml = Path(__file__).parent / "fixtures" / "invalid" / "missing_text_element.xml"
+        invalid_xml = (
+            Path(__file__).parent / "fixtures" / "invalid" / "missing_text_element.xml"
+        )
 
         with pytest.raises(InvalidTEIStructureError) as exc_info:
             TEIParser(invalid_xml)
@@ -92,10 +94,12 @@ class TestTEIParser:
 
     def test_parse_missing_body_element_raises_error(self):
         """Test that parser raises InvalidTEIStructureError for missing <body> element."""
-        from exeuresis.parser import TEIParser
         from exeuresis.exceptions import InvalidTEIStructureError
+        from exeuresis.parser import TEIParser
 
-        invalid_xml = Path(__file__).parent / "fixtures" / "invalid" / "missing_body_element.xml"
+        invalid_xml = (
+            Path(__file__).parent / "fixtures" / "invalid" / "missing_body_element.xml"
+        )
 
         with pytest.raises(InvalidTEIStructureError) as exc_info:
             TEIParser(invalid_xml)

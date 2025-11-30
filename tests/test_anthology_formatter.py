@@ -1,10 +1,11 @@
 """Tests for anthology formatter."""
 
 import pytest
+
 from exeuresis.anthology_extractor import AnthologyBlock
 from exeuresis.anthology_formatter import AnthologyFormatter
-from exeuresis.formatter import OutputStyle
 from exeuresis.exceptions import InvalidStyleError
+from exeuresis.formatter import OutputStyle
 
 
 class TestAnthologyFormatter:
@@ -42,13 +43,17 @@ class TestAnthologyFormatter:
             work_title_en="Euthyphro",
             work_title_gr="Εὐθύφρων",
             range_display="5a",
-            segments=[{"speaker": "", "label": "", "text": "Text 1", "stephanus": ["5a"]}],
+            segments=[
+                {"speaker": "", "label": "", "text": "Text 1", "stephanus": ["5a"]}
+            ],
         )
         block2 = AnthologyBlock(
             work_title_en="Republic",
             work_title_gr="Πολιτεία",
             range_display="354b",
-            segments=[{"speaker": "", "label": "", "text": "Text 2", "stephanus": ["354b"]}],
+            segments=[
+                {"speaker": "", "label": "", "text": "Text 2", "stephanus": ["354b"]}
+            ],
             book="1",
         )
 
@@ -71,7 +76,9 @@ class TestAnthologyFormatter:
             work_title_en="Euthyphro",
             work_title_gr="Εὐθύφρων",
             range_display="5a",
-            segments=[{"speaker": "", "label": "", "text": "Text", "stephanus": ["5a"]}],
+            segments=[
+                {"speaker": "", "label": "", "text": "Text", "stephanus": ["5a"]}
+            ],
         )
 
         formatter = AnthologyFormatter(style=OutputStyle.MINIMAL_PUNCTUATION)
@@ -85,7 +92,9 @@ class TestAnthologyFormatter:
             work_title_en="Euthyphro",
             work_title_gr="Εὐθύφρων",
             range_display="5a",
-            segments=[{"speaker": "", "label": "", "text": "Text", "stephanus": ["5a"]}],
+            segments=[
+                {"speaker": "", "label": "", "text": "Text", "stephanus": ["5a"]}
+            ],
         )
 
         with pytest.raises(InvalidStyleError, match="Style E .* not supported"):
@@ -97,7 +106,9 @@ class TestAnthologyFormatter:
             work_title_en="Euthyphro",
             work_title_gr="Εὐθύφρων",
             range_display="5a",
-            segments=[{"speaker": "", "label": "", "text": "Text", "stephanus": ["5a"]}],
+            segments=[
+                {"speaker": "", "label": "", "text": "Text", "stephanus": ["5a"]}
+            ],
         )
 
         with pytest.raises(InvalidStyleError, match="Style S .* not supported"):

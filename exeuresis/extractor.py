@@ -1,7 +1,6 @@
 """Text extraction from parsed TEI XML."""
 
-from typing import List, Dict
-from lxml import etree
+from typing import Dict, List
 
 from exeuresis.exceptions import EmptyExtractionError
 
@@ -58,16 +57,14 @@ class TextExtractor:
         # Check if we extracted any actual text
         if not result:
             raise EmptyExtractionError(
-                str(self.parser.xml_path),
-                "No text elements found in document"
+                str(self.parser.xml_path), "No text elements found in document"
             )
 
         # Check if all entries are empty
         has_text = any(entry.get("text", "").strip() for entry in result)
         if not has_text:
             raise EmptyExtractionError(
-                str(self.parser.xml_path),
-                "All extracted entries are empty"
+                str(self.parser.xml_path), "All extracted entries are empty"
             )
 
         return result
@@ -103,15 +100,17 @@ class TextExtractor:
 
             # Add speaker, label, said_id, book, and paragraph flag to each segment
             for segment in segments:
-                dialogue.append({
-                    "speaker": speaker,
-                    "label": label,
-                    "text": segment["text"],
-                    "stephanus": segment["stephanus"],
-                    "said_id": said_index,  # Track which <said> this came from
-                    "is_paragraph_start": segment.get("is_paragraph_start", False),
-                    "book": book_num,  # Track which book this came from
-                })
+                dialogue.append(
+                    {
+                        "speaker": speaker,
+                        "label": label,
+                        "text": segment["text"],
+                        "stephanus": segment["stephanus"],
+                        "said_id": said_index,  # Track which <said> this came from
+                        "is_paragraph_start": segment.get("is_paragraph_start", False),
+                        "book": book_num,  # Track which book this came from
+                    }
+                )
 
         return dialogue
 
@@ -148,15 +147,17 @@ class TextExtractor:
                     # Only add section number if there are no milestone markers
                     stephanus = [section_num]
 
-                entries.append({
-                    "speaker": "",
-                    "label": "",
-                    "text": segment["text"],
-                    "stephanus": stephanus,
-                    "said_id": p_index,  # Track which <p> this came from
-                    "is_paragraph_start": segment.get("is_paragraph_start", False),
-                    "book": book_num,  # Track which book this came from
-                })
+                entries.append(
+                    {
+                        "speaker": "",
+                        "label": "",
+                        "text": segment["text"],
+                        "stephanus": stephanus,
+                        "said_id": p_index,  # Track which <p> this came from
+                        "is_paragraph_start": segment.get("is_paragraph_start", False),
+                        "book": book_num,  # Track which book this came from
+                    }
+                )
 
         return entries
 
@@ -199,12 +200,14 @@ class TextExtractor:
 
             # Skip empty paragraphs
             if text:
-                entries.append({
-                    "speaker": "",
-                    "label": "",
-                    "text": text,
-                    "stephanus": stephanus,
-                })
+                entries.append(
+                    {
+                        "speaker": "",
+                        "label": "",
+                        "text": text,
+                        "stephanus": stephanus,
+                    }
+                )
 
         return entries
 
@@ -255,8 +258,12 @@ class TextExtractor:
         markers = []
         # Extract section milestones (Plato texts) and stephpage milestones (Plutarch texts)
         # Note: Some section milestones don't have resp="Stephanus" but are still valid
-        section_milestones = element.findall(".//tei:milestone[@unit='section']", self.NS)
-        stephpage_milestones = element.findall(".//tei:milestone[@unit='stephpage']", self.NS)
+        section_milestones = element.findall(
+            ".//tei:milestone[@unit='section']", self.NS
+        )
+        stephpage_milestones = element.findall(
+            ".//tei:milestone[@unit='stephpage']", self.NS
+        )
 
         # Combine both types of milestones
         all_milestones = section_milestones + stephpage_milestones
@@ -316,7 +323,7 @@ class TextExtractor:
 
         # Remove stray gamma at end (OCR artifact in Perseus texts)
         # Pattern: gamma at end of text, often after punctuation
-        if normalized_text.endswith('γ'):
+        if normalized_text.endswith("γ"):
             normalized_text = normalized_text[:-1].rstrip()
 
         return normalized_text.strip()
@@ -362,9 +369,11 @@ class TextExtractor:
         current = element
         while current is not None:
             # Check if this is a book div
-            if (current.tag == f"{{{self.NS['tei']}}}div" and
-                current.get("type") == "textpart" and
-                current.get("subtype") == "book"):
+            if (
+                current.tag == f"{{{self.NS['tei']}}}div"
+                and current.get("type") == "textpart"
+                and current.get("subtype") == "book"
+            ):
                 book_num = current.get("n", "")
                 return book_num
             # Move to parent
@@ -386,9 +395,11 @@ class TextExtractor:
         current = element
         while current is not None:
             # Check if this is a section div
-            if (current.tag == f"{{{self.NS['tei']}}}div" and
-                current.get("type") == "textpart" and
-                current.get("subtype") == "section"):
+            if (
+                current.tag == f"{{{self.NS['tei']}}}div"
+                and current.get("type") == "textpart"
+                and current.get("subtype") == "section"
+            ):
                 section_num = current.get("n", "")
                 return section_num
             # Move to parent
@@ -431,14 +442,16 @@ class TextExtractor:
                         text = " ".join(current_text_parts)
                         text = " ".join(text.split()).strip()
                         # Remove stray gamma at end (OCR artifact)
-                        if text.endswith('γ'):
+                        if text.endswith("γ"):
                             text = text[:-1].rstrip()
                         if text:
-                            segments.append({
-                                "text": text,
-                                "stephanus": pending_markers.copy(),  # Attach pending markers
-                                "is_paragraph_start": is_paragraph_start
-                            })
+                            segments.append(
+                                {
+                                    "text": text,
+                                    "stephanus": pending_markers.copy(),  # Attach pending markers
+                                    "is_paragraph_start": is_paragraph_start,
+                                }
+                            )
                             pending_markers = []  # Clear after attaching
                             is_paragraph_start = False
                         current_text_parts = []
@@ -453,14 +466,16 @@ class TextExtractor:
                         text = " ".join(current_text_parts)
                         text = " ".join(text.split()).strip()
                         # Remove stray gamma at end (OCR artifact)
-                        if text.endswith('γ'):
+                        if text.endswith("γ"):
                             text = text[:-1].rstrip()
                         if text:
-                            segments.append({
-                                "text": text,
-                                "stephanus": pending_markers.copy(),  # Attach OLD pending markers
-                                "is_paragraph_start": is_paragraph_start
-                            })
+                            segments.append(
+                                {
+                                    "text": text,
+                                    "stephanus": pending_markers.copy(),  # Attach OLD pending markers
+                                    "is_paragraph_start": is_paragraph_start,
+                                }
+                            )
                             is_paragraph_start = False
                         current_text_parts = []
 
@@ -492,13 +507,15 @@ class TextExtractor:
             text = " ".join(current_text_parts)
             text = " ".join(text.split()).strip()
             # Remove stray gamma at end (OCR artifact)
-            if text.endswith('γ'):
+            if text.endswith("γ"):
                 text = text[:-1].rstrip()
             if text:
-                segments.append({
-                    "text": text,
-                    "stephanus": pending_markers.copy(),  # Attach any remaining pending markers
-                    "is_paragraph_start": is_paragraph_start
-                })
+                segments.append(
+                    {
+                        "text": text,
+                        "stephanus": pending_markers.copy(),  # Attach any remaining pending markers
+                        "is_paragraph_start": is_paragraph_start,
+                    }
+                )
 
         return segments

@@ -1,15 +1,15 @@
 """Anthology extraction for discontinuous passages."""
 
 from dataclasses import dataclass
-from typing import List, Dict, Optional
 from pathlib import Path
+from typing import Dict, List, Optional
 
 from exeuresis.catalog import PerseusCatalog
 from exeuresis.config import get_corpus_path
-from exeuresis.parser import TEIParser
-from exeuresis.extractor import TextExtractor
-from exeuresis.range_filter import RangeFilter
 from exeuresis.exceptions import WorkNotFoundError
+from exeuresis.extractor import TextExtractor
+from exeuresis.parser import TEIParser
+from exeuresis.range_filter import RangeFilter
 
 
 def parse_range_list(range_str: str) -> List[str]:
@@ -94,7 +94,9 @@ class AnthologyBlock:
 class AnthologyExtractor:
     """Extract anthology passages from multiple works and ranges."""
 
-    def __init__(self, data_dir: Optional[Path] = None, corpus_name: Optional[str] = None):
+    def __init__(
+        self, data_dir: Optional[Path] = None, corpus_name: Optional[str] = None
+    ):
         """
         Initialize AnthologyExtractor.
 
@@ -188,7 +190,9 @@ class AnthologyExtractor:
                     "title_gr": work.title_grc or "Unknown",
                 }
 
-        raise WorkNotFoundError(work_id, f"Work {work_num} not found for author {author_id}")
+        raise WorkNotFoundError(
+            work_id, f"Work {work_num} not found for author {author_id}"
+        )
 
     def _get_book_number(self, segments: List[Dict]) -> Optional[str]:
         """

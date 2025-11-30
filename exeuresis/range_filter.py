@@ -3,22 +3,24 @@
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Dict
+from typing import Dict, List
 
 from exeuresis.exceptions import InvalidStephanusRangeError
 
 
 class RangeType(Enum):
     """Types of Stephanus ranges."""
+
     SINGLE_SECTION = "single_section"  # e.g., "327a"
-    SINGLE_PAGE = "single_page"        # e.g., "327"
-    SECTION_RANGE = "section_range"    # e.g., "327a-328c"
-    PAGE_RANGE = "page_range"          # e.g., "327-329"
+    SINGLE_PAGE = "single_page"  # e.g., "327"
+    SECTION_RANGE = "section_range"  # e.g., "327a-328c"
+    PAGE_RANGE = "page_range"  # e.g., "327-329"
 
 
 @dataclass
 class RangeSpec:
     """Specification for a Stephanus range."""
+
     start: str
     end: str
     range_type: RangeType
@@ -38,7 +40,7 @@ class StephanusRangeParser:
     """Parse Stephanus range specifications."""
 
     # Pattern for Stephanus markers: page number optionally followed by section letter
-    MARKER_PATTERN = re.compile(r'^(\d+)([a-z])?$')
+    MARKER_PATTERN = re.compile(r"^(\d+)([a-z])?$")
 
     def parse(self, range_spec: str) -> RangeSpec:
         """
@@ -59,10 +61,12 @@ class StephanusRangeParser:
         range_spec = range_spec.strip()
 
         # Check if it's a range (contains hyphen)
-        if '-' in range_spec:
-            parts = range_spec.split('-')
+        if "-" in range_spec:
+            parts = range_spec.split("-")
             if len(parts) != 2:
-                raise ValueError(f"Invalid range format: '{range_spec}' (multiple hyphens)")
+                raise ValueError(
+                    f"Invalid range format: '{range_spec}' (multiple hyphens)"
+                )
 
             start = parts[0].strip()
             end = parts[1].strip()
@@ -79,7 +83,9 @@ class StephanusRangeParser:
 
             if start_has_section or end_has_section:
                 # At least one has a section letter → section range
-                return RangeSpec(start=start, end=end, range_type=RangeType.SECTION_RANGE)
+                return RangeSpec(
+                    start=start, end=end, range_type=RangeType.SECTION_RANGE
+                )
             else:
                 # Both are just numbers → page range
                 return RangeSpec(start=start, end=end, range_type=RangeType.PAGE_RANGE)
@@ -89,9 +95,15 @@ class StephanusRangeParser:
                 raise ValueError(f"Invalid range format: '{range_spec}'")
 
             if self._has_section_letter(range_spec):
-                return RangeSpec(start=range_spec, end=range_spec, range_type=RangeType.SINGLE_SECTION)
+                return RangeSpec(
+                    start=range_spec,
+                    end=range_spec,
+                    range_type=RangeType.SINGLE_SECTION,
+                )
             else:
-                return RangeSpec(start=range_spec, end=range_spec, range_type=RangeType.SINGLE_PAGE)
+                return RangeSpec(
+                    start=range_spec, end=range_spec, range_type=RangeType.SINGLE_PAGE
+                )
 
     def _is_valid_marker(self, marker: str) -> bool:
         """Check if a marker matches the Stephanus pattern."""
@@ -104,7 +116,7 @@ class StephanusRangeParser:
 
     def _expand_shorthand_end(self, start: str, end: str) -> str:
         """Expand shorthand end markers like '3a-c' → '3c'."""
-        if re.match(r'^[a-z]$', end):
+        if re.match(r"^[a-z]$", end):
             start_match = self.MARKER_PATTERN.match(start)
             if not start_match:
                 raise ValueError(f"Invalid range format: '{start}'")
@@ -141,8 +153,8 @@ class StephanusComparator:
         section2 = self.extract_section_letter(marker2)
 
         # Empty section (page-only marker) is treated as 'a' (start of page)
-        section1 = section1 or 'a'
-        section2 = section2 or 'a'
+        section1 = section1 or "a"
+        section2 = section2 or "a"
 
         if section1 < section2:
             return -1
@@ -153,14 +165,14 @@ class StephanusComparator:
 
     def extract_page_number(self, marker: str) -> int:
         """Extract page number from marker."""
-        match = re.match(r'^(\d+)', marker)
+        match = re.match(r"^(\d+)", marker)
         if match:
             return int(match.group(1))
         raise ValueError(f"Invalid marker format: '{marker}'")
 
     def extract_section_letter(self, marker: str) -> str:
         """Extract section letter from marker (empty string if none)."""
-        match = re.match(r'^\d+([a-z])?$', marker)
+        match = re.match(r"^\d+([a-z])?$", marker)
         if match:
             return match.group(1) or ""
         raise ValueError(f"Invalid marker format: '{marker}'")
@@ -173,7 +185,9 @@ class RangeFilter:
         self.parser = StephanusRangeParser()
         self.comparator = StephanusComparator()
 
-    def filter(self, segments: List[Dict], range_spec: str, work_id: str = "") -> List[Dict]:
+    def filter(
+        self, segments: List[Dict], range_spec: str, work_id: str = ""
+    ) -> List[Dict]:
         """
         Filter dialogue segments to only those within the specified range.
 
@@ -190,9 +204,7 @@ class RangeFilter:
         """
         if not segments:
             raise InvalidStephanusRangeError(
-                work_id or "unknown",
-                range_spec,
-                "No segments found in document"
+                work_id or "unknown", range_spec, "No segments found in document"
             )
 
         # Parse the range
@@ -212,7 +224,7 @@ class RangeFilter:
             raise InvalidStephanusRangeError(
                 work_id or "unknown",
                 range_spec,
-                f"No text found for range '{range_spec}' in this work"
+                f"No text found for range '{range_spec}' in this work",
             )
 
         return filtered

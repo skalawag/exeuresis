@@ -4,33 +4,35 @@ import argparse
 import logging
 import shutil
 import sys
+from datetime import datetime
 from pathlib import Path
 
-from exeuresis.parser import TEIParser
-from exeuresis.extractor import TextExtractor
-from exeuresis.formatter import TextFormatter, OutputStyle
-from exeuresis.catalog import PerseusCatalog
-from exeuresis.config import CorpusConfig, get_corpora, get_default_corpus_name
-from exeuresis.range_filter import RangeFilter
-from exeuresis.work_resolver import WorkResolver
 from exeuresis.anthology_extractor import (
     AnthologyExtractor,
     PassageSpec,
     parse_range_list,
 )
 from exeuresis.anthology_formatter import AnthologyFormatter
+from exeuresis.catalog import PerseusCatalog
+from exeuresis.config import CorpusConfig, get_corpora, get_default_corpus_name
 from exeuresis.corpus_health import (
     CorpusHealthResult,
     CorpusHealthStatus,
     check_corpus,
 )
 from exeuresis.exceptions import (
-    WorkNotFoundError,
-    InvalidTEIStructureError,
     EmptyExtractionError,
-    InvalidStyleError,
     InvalidStephanusRangeError,
+    InvalidStyleError,
+    InvalidTEIStructureError,
+    WorkNotFoundError,
 )
+from exeuresis.extractor import TextExtractor
+from exeuresis.formatter import OutputStyle
+from exeuresis.output_writers import JSONLWriter, JSONWriter, TextWriter
+from exeuresis.parser import TEIParser
+from exeuresis.range_filter import RangeFilter
+from exeuresis.work_resolver import WorkResolver
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +48,9 @@ def parse_wrap_arg(value):
 
     if isinstance(value, int):
         if value < 0:
-            raise argparse.ArgumentTypeError("wrap width must be positive or 0 to disable")
+            raise argparse.ArgumentTypeError(
+                "wrap width must be positive or 0 to disable"
+            )
         return value or None
 
     if value is None:
@@ -60,7 +64,9 @@ def parse_wrap_arg(value):
     try:
         width = int(str_value)
     except ValueError as exc:  # pragma: no cover - defensive
-        raise argparse.ArgumentTypeError("wrap width must be an integer or 'off'") from exc
+        raise argparse.ArgumentTypeError(
+            "wrap width must be an integer or 'off'"
+        ) from exc
 
     if width < 0:
         raise argparse.ArgumentTypeError("wrap width must be positive or 0 to disable")
@@ -72,55 +78,53 @@ def _print_works_table(works):
     """Print works in tabular format."""
     if not works:
         return
-    
+
     # Get terminal width
     terminal_width = shutil.get_terminal_size(fallback=(80, 24)).columns
-    
+
     # Calculate natural column widths
     natural_title_width = max(
         len(f"{w.title_en} ({w.title_grc})" if w.title_grc else w.title_en)
         for w in works
     )
     natural_title_width = max(natural_title_width, len("Title"))
-    
-    sections_width = max(
-        len(w.page_range) if w.page_range else 0
-        for w in works
-    )
+
+    sections_width = max(len(w.page_range) if w.page_range else 0 for w in works)
     sections_width = max(sections_width, len("Sections"))
-    
+
     # Work ID format: tlg0059.tlg001
-    work_id_width = max(
-        len(f"{w.tlg_id}.{w.work_id}")
-        for w in works
-    )
+    work_id_width = max(len(f"{w.tlg_id}.{w.work_id}") for w in works)
     work_id_width = max(work_id_width, len("File"))
-    
+
     # Calculate available width for title (leave 4 chars for separators)
     fixed_width = sections_width + work_id_width + 4
     available_title_width = terminal_width - fixed_width
-    
+
     # Set title width (minimum 30, max terminal allows)
     title_width = max(30, min(natural_title_width, available_title_width))
-    
+
     # Helper function to truncate title if needed
     def format_title(work):
-        title = f"{work.title_en} ({work.title_grc})" if work.title_grc else work.title_en
+        title = (
+            f"{work.title_en} ({work.title_grc})" if work.title_grc else work.title_en
+        )
         if len(title) > title_width:
-            return title[:title_width-3] + "..."
+            return title[: title_width - 3] + "..."
         return title
-    
+
     # Print header
     header = f"{'Title':<{title_width}}  {'Sections':<{sections_width}}  {'File':<{work_id_width}}"
     print(header)
     print("-" * len(header))
-    
+
     # Print rows
     for work in works:
         title = format_title(work)
         sections = work.page_range if work.page_range else ""
         file_id = f"{work.tlg_id}.{work.work_id}"
-        print(f"{title:<{title_width}}  {sections:<{sections_width}}  {file_id:<{work_id_width}}")
+        print(
+            f"{title:<{title_width}}  {sections:<{sections_width}}  {file_id:<{work_id_width}}"
+        )
 
 
 def _print_corpus_health(
@@ -154,7 +158,7 @@ def _print_corpus_health(
             extras.append(f"{result.sample_percent:g}%")
         if result.seed is not None:
             extras.append(f"seed={result.seed}")
-        suffix = f"quick sample"
+        suffix = "quick sample"
         if extras:
             suffix += f" ({', '.join(extras)})"
         print(f"    Checked: {sample_info} — {suffix}")
@@ -218,7 +222,9 @@ def handle_list_works(args):
 
     # Single author mode
     if not args.author_id:
-        print("Error: author_id is required when --all is not specified", file=sys.stderr)
+        print(
+            "Error: author_id is required when --all is not specified", file=sys.stderr
+        )
         sys.exit(1)
 
     # Resolve author name to TLG ID
@@ -311,14 +317,21 @@ def handle_list_corpora(args):
         for name, corpus_config, is_manual in entries:
             if corpus_config.path.exists() or is_manual:
                 filtered_entries.append((name, corpus_config))
-        entries_to_display = filtered_entries or [(name, config) for name, config, _ in entries]
+        entries_to_display = filtered_entries or [
+            (name, config) for name, config, _ in entries
+        ]
     else:
         entries_to_display = [(name, config) for name, config, _ in entries]
 
     for name, corpus_config in entries_to_display:
         display_name = f"{name} (default)" if name == default_name else name
         result = check_corpus(corpus_config, mode="quick")
-        _print_corpus_health(display_name, corpus_config, result, detailed=getattr(args, "details", False))
+        _print_corpus_health(
+            display_name,
+            corpus_config,
+            result,
+            detailed=getattr(args, "details", False),
+        )
         print()
 
 
@@ -336,7 +349,11 @@ def handle_check_corpus(args):
             corpus_config = corpora[manual_arg]
         else:
             path_candidate = Path(manual_arg).expanduser()
-            if "/" in manual_arg or manual_arg.startswith(".") or path_candidate.exists():
+            if (
+                "/" in manual_arg
+                or manual_arg.startswith(".")
+                or path_candidate.exists()
+            ):
                 manual_config = CorpusConfig(
                     name=str(path_candidate),
                     path=path_candidate,
@@ -345,7 +362,10 @@ def handle_check_corpus(args):
                 corpus_config = manual_config
             elif not corpora:
                 print(f"Corpus '{manual_arg}' not found.", file=sys.stderr)
-                print("No corpora configured. Provide a path via --corpus.", file=sys.stderr)
+                print(
+                    "No corpora configured. Provide a path via --corpus.",
+                    file=sys.stderr,
+                )
                 sys.exit(1)
             else:
                 print(f"Corpus '{manual_arg}' not found.", file=sys.stderr)
@@ -360,7 +380,9 @@ def handle_check_corpus(args):
             first_name = sorted(corpora.keys())[0]
             corpus_config = corpora[first_name]
         else:
-            print("No corpora configured and no --corpus path provided.", file=sys.stderr)
+            print(
+                "No corpora configured and no --corpus path provided.", file=sys.stderr
+            )
             sys.exit(1)
 
     if args.mode == "full" and args.sample_percent is not None:
@@ -469,24 +491,71 @@ def handle_anthology_extract(args):
     }
     output_style = style_map[args.style]
     wrap_width = getattr(args, "wrap_width", 79)
-    wrap_width = getattr(args, "wrap_width", 79)
+    output_format = getattr(args, "format", "text")
 
     # Determine output destination
     output_to_stdout = args.print or (args.output and str(args.output) == "-")
 
     if args.verbose:
-        print(f"Anthology extraction mode", file=sys.stderr)
+        print("Anthology extraction mode", file=sys.stderr)
         print(f"Extracting {len(resolved_passages)} work(s)", file=sys.stderr)
-        print(f"Style: {output_style.value}", file=sys.stderr)
+        if output_format == "text":
+            print(f"Style: {output_style.value}", file=sys.stderr)
+        else:
+            print(f"Format: {output_format}", file=sys.stderr)
 
     try:
         # Extract anthology blocks
         extractor = AnthologyExtractor(corpus_name=args.corpus)
         blocks = extractor.extract_passages(resolved_passages)
 
-        # Format blocks
-        formatter = AnthologyFormatter(style=output_style, wrap_width=wrap_width)
-        output_text = formatter.format_blocks(blocks)
+        # Format based on output format
+        if output_format == "json":
+            # JSON format: create metadata and flatten blocks
+            metadata = {
+                "anthology": True,
+                "num_works": len(blocks),
+                "extraction_timestamp": datetime.now().isoformat(),
+                "format_version": "1.0",
+            }
+
+            # Flatten blocks into segments with block metadata
+            all_segments = []
+            for block_idx, block in enumerate(blocks):
+                for segment in block.segments:
+                    segment_with_block = segment.copy()
+                    segment_with_block["block_index"] = block_idx
+                    segment_with_block["work_id"] = block.work_id
+                    segment_with_block["work_title_en"] = block.work_title_en
+                    segment_with_block["work_title_gr"] = block.work_title_gr
+                    segment_with_block["range_display"] = block.range_display
+                    if block.book:
+                        segment_with_block["work_book"] = block.book
+                    all_segments.append(segment_with_block)
+
+            writer = JSONWriter()
+            output_text = writer.format(all_segments, metadata=metadata)
+        elif output_format == "jsonl":
+            # JSONL format: flatten blocks with block metadata
+            all_segments = []
+            for block_idx, block in enumerate(blocks):
+                for segment in block.segments:
+                    segment_with_block = segment.copy()
+                    segment_with_block["block_index"] = block_idx
+                    segment_with_block["work_id"] = block.work_id
+                    segment_with_block["work_title_en"] = block.work_title_en
+                    segment_with_block["work_title_gr"] = block.work_title_gr
+                    segment_with_block["range_display"] = block.range_display
+                    if block.book:
+                        segment_with_block["work_book"] = block.book
+                    all_segments.append(segment_with_block)
+
+            writer = JSONLWriter()
+            output_text = writer.format(all_segments)
+        else:
+            # Text format (default)
+            formatter = AnthologyFormatter(style=output_style, wrap_width=wrap_width)
+            output_text = formatter.format_blocks(blocks)
 
         # Output
         if output_to_stdout:
@@ -498,8 +567,16 @@ def handle_anthology_extract(args):
             else:
                 output_dir = Path("output")
                 output_dir.mkdir(exist_ok=True)
-                style_suffix = args.style.upper() if len(args.style) == 1 else args.style
-                output_file = output_dir / f"anthology_{style_suffix}.txt"
+
+                if output_format == "json":
+                    output_file = output_dir / "anthology_json.json"
+                elif output_format == "jsonl":
+                    output_file = output_dir / "anthology_jsonl.jsonl"
+                else:
+                    style_suffix = (
+                        args.style.upper() if len(args.style) == 1 else args.style
+                    )
+                    output_file = output_dir / f"anthology_{style_suffix}.txt"
 
             with open(output_file, "w", encoding="utf-8") as f:
                 f.write(output_text)
@@ -510,7 +587,7 @@ def handle_anthology_extract(args):
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
     except Exception as e:
-        if args.debug if hasattr(args, 'debug') else False:
+        if args.debug if hasattr(args, "debug") else False:
             raise
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
@@ -519,13 +596,15 @@ def handle_anthology_extract(args):
 def handle_extract(args):
     """Handle the extract command (supports both single extraction and anthology)."""
     # Check if we're in anthology mode
-    if hasattr(args, 'passage_specs') and args.passage_specs:
+    if hasattr(args, "passage_specs") and args.passage_specs:
         handle_anthology_extract(args)
         return
 
     # Original single-extraction mode
     # input_file is a list due to nargs='+', take first element
-    input_files_list = args.input_file if isinstance(args.input_file, list) else [args.input_file]
+    input_files_list = (
+        args.input_file if isinstance(args.input_file, list) else [args.input_file]
+    )
     input_file_arg = Path(input_files_list[0])
 
     # If there are 2 elements in input_file, the second is the range
@@ -555,7 +634,10 @@ def handle_extract(args):
 
             if args.verbose:
                 if input_str != work_id:
-                    print(f"Resolved work name '{input_str}' to work ID '{work_id}'", file=sys.stderr)
+                    print(
+                        f"Resolved work name '{input_str}' to work ID '{work_id}'",
+                        file=sys.stderr,
+                    )
                 print(f"Resolved work ID '{work_id}' to: {input_file}", file=sys.stderr)
         except WorkNotFoundError as e:
             print(f"Error: {e}", file=sys.stderr)
@@ -584,6 +666,7 @@ def handle_extract(args):
 
     output_style = style_map[args.style]
     wrap_width = getattr(args, "wrap_width", 79)
+    output_format = getattr(args, "format", "text")
 
     # Determine output destination
     output_to_stdout = args.print or (args.output and str(args.output) == "-")
@@ -596,8 +679,14 @@ def handle_extract(args):
         # Generate default output filename in ./output/ directory
         output_dir = Path("output")
         output_dir.mkdir(exist_ok=True)
-        style_suffix = args.style.upper() if len(args.style) == 1 else args.style
-        output_file = output_dir / f"{input_file.stem}_{style_suffix}.txt"
+
+        if output_format == "json":
+            output_file = output_dir / f"{input_file.stem}_json.json"
+        elif output_format == "jsonl":
+            output_file = output_dir / f"{input_file.stem}_jsonl.jsonl"
+        else:
+            style_suffix = args.style.upper() if len(args.style) == 1 else args.style
+            output_file = output_dir / f"{input_file.stem}_{style_suffix}.txt"
 
     # Warn if trying to write to canonical-greekLit directory
     if output_file and "canonical-greekLit" in str(output_file):
@@ -618,7 +707,7 @@ def handle_extract(args):
         print(f"Processing: {input_file}", file=sys.stderr)
         print(f"Style: {output_style.value}", file=sys.stderr)
         if output_to_stdout:
-            print(f"Output: stdout", file=sys.stderr)
+            print("Output: stdout", file=sys.stderr)
         else:
             print(f"Output: {output_file}", file=sys.stderr)
 
@@ -655,37 +744,65 @@ def handle_extract(args):
         if args.verbose:
             print(f"Found {len(dialogue)} dialogue entries", file=sys.stderr)
 
-        # Format output
+        # Format output based on selected format
         if args.verbose:
-            print("Formatting text...", file=sys.stderr)
-        formatter = TextFormatter(
-            dialogue,
-            extractor=extractor,
-            parser=parser_obj,
-            wrap_width=wrap_width,
-        )
-        formatted_text = formatter.format(output_style)
+            print(f"Formatting output as {output_format}...", file=sys.stderr)
 
-        # Output the text
+        if output_format == "json":
+            # JSON format with metadata
+            metadata = {
+                "work_id": work_id or str(input_file.stem),
+                "title": parser_obj.get_title() if parser_obj else "",
+                "extraction_timestamp": datetime.now().isoformat(),
+                "format_version": "1.0",
+            }
+            if args.range:
+                metadata["range"] = args.range
+
+            writer = JSONWriter()
+            formatted_output = writer.format(dialogue, metadata=metadata)
+        elif output_format == "jsonl":
+            # JSONL format (no metadata wrapper)
+            writer = JSONLWriter()
+            formatted_output = writer.format(dialogue)
+        else:
+            # Text format (default)
+            writer = TextWriter(
+                style=output_style,
+                wrap_width=wrap_width,
+                extractor=extractor,
+                parser=parser_obj,
+            )
+            formatted_output = writer.format(dialogue)
+
+        # Output the formatted text
         if output_to_stdout:
             # Print to console
-            print(formatted_text)
+            print(formatted_output)
         else:
             # Write to file
             if args.verbose:
                 print(f"Writing to {output_file}...", file=sys.stderr)
-            output_file.write_text(formatted_text, encoding="utf-8")
+            output_file.write_text(formatted_output, encoding="utf-8")
 
             print(f"Successfully created: {output_file}")
 
             if args.verbose:
-                print(f"Output size: {len(formatted_text)} characters", file=sys.stderr)
+                print(
+                    f"Output size: {len(formatted_output)} characters", file=sys.stderr
+                )
 
-    except (InvalidTEIStructureError, EmptyExtractionError, InvalidStyleError, InvalidStephanusRangeError) as e:
+    except (
+        InvalidTEIStructureError,
+        EmptyExtractionError,
+        InvalidStyleError,
+        InvalidStephanusRangeError,
+    ) as e:
         # Custom exceptions with clear user messages
         print(f"Error: {e}", file=sys.stderr)
         if args.verbose:
             import traceback
+
             traceback.print_exc()
         sys.exit(1)
     except Exception as e:
@@ -693,6 +810,7 @@ def handle_extract(args):
         print(f"Error: {e}", file=sys.stderr)
         if args.verbose:
             import traceback
+
             traceback.print_exc()
         sys.exit(1)
 
@@ -732,14 +850,12 @@ For detailed help on any command, use:
 
     # Add global flags
     parser.add_argument(
-        "--debug",
-        action="store_true",
-        help="Enable debug logging output"
+        "--debug", action="store_true", help="Enable debug logging output"
     )
     parser.add_argument(
         "--corpus",
         metavar="NAME",
-        help='Corpus to use (default: from config or "default")'
+        help='Corpus to use (default: from config or "default")',
     )
 
     # Add subcommands
@@ -772,7 +888,7 @@ Examples:
     )
     extract_parser.add_argument(
         "input_file",
-        nargs='+',
+        nargs="+",
         help="Path to TEI XML file, work ID (e.g., tlg0059.tlg001), or work name(s) for anthology",
     )
     extract_parser.add_argument(
@@ -810,6 +926,14 @@ Examples:
         help="Output style (default: A)",
     )
     extract_parser.add_argument(
+        "-f",
+        "--format",
+        type=str,
+        default="text",
+        choices=["text", "json", "jsonl"],
+        help="Output format: text (default), json (array with metadata), jsonl (newline-delimited)",
+    )
+    extract_parser.add_argument(
         "-o",
         "--output",
         type=Path,
@@ -845,17 +969,16 @@ Examples:
 
     # List works subcommand
     list_works_parser = subparsers.add_parser(
-        "list-works", help="List all works for a specific author or all works with --all"
+        "list-works",
+        help="List all works for a specific author or all works with --all",
     )
     list_works_parser.add_argument(
         "author_id",
         nargs="?",
-        help="Author TLG ID (e.g., tlg0059 for Plato). Optional if --all is used."
+        help="Author TLG ID (e.g., tlg0059 for Plato). Optional if --all is used.",
     )
     list_works_parser.add_argument(
-        "--all",
-        action="store_true",
-        help="List all works from all authors"
+        "--all", action="store_true", help="List all works from all authors"
     )
     list_works_parser.set_defaults(func=handle_list_works)
 
@@ -940,16 +1063,12 @@ Examples:
     if args.debug:
         # DEBUG level shows all messages including debug info
         logging.basicConfig(
-            level=logging.DEBUG,
-            format="[%(levelname)s] %(name)s: %(message)s"
+            level=logging.DEBUG, format="[%(levelname)s] %(name)s: %(message)s"
         )
         logger.debug("Debug mode enabled")
     else:
         # WARNING level shows only warnings and errors (not info)
-        logging.basicConfig(
-            level=logging.WARNING,
-            format="[%(levelname)s] %(message)s"
-        )
+        logging.basicConfig(level=logging.WARNING, format="[%(levelname)s] %(message)s")
 
     # If no command specified, show help
     if args.command is None:

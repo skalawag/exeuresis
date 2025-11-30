@@ -1,8 +1,10 @@
 """Tests for Perseus catalog functionality."""
 
-import pytest
 from pathlib import Path
-from exeuresis.catalog import PerseusCatalog, PerseusAuthor, PerseusWork
+
+import pytest
+
+from exeuresis.catalog import PerseusCatalog
 from exeuresis.exceptions import WorkNotFoundError
 
 
@@ -68,8 +70,12 @@ class TestPerseusCatalog:
 
         # Check Plato's Republic is in results
         republic = next(
-            ((a, w) for a, w in results if a.tlg_id == "tlg0059" and w.work_id == "tlg030"),
-            None
+            (
+                (a, w)
+                for a, w in results
+                if a.tlg_id == "tlg0059" and w.work_id == "tlg030"
+            ),
+            None,
         )
         assert republic is not None
         author, work = republic
@@ -83,10 +89,7 @@ class TestPerseusCatalog:
         assert len(results) >= 1
 
         # Check Phaedo is in results
-        phaedo = next(
-            ((a, w) for a, w in results if w.title_grc == "Φαίδων"),
-            None
-        )
+        phaedo = next(((a, w) for a, w in results if w.title_grc == "Φαίδων"), None)
         assert phaedo is not None
 
     def test_search_case_insensitive(self, catalog):

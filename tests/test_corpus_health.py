@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from types import SimpleNamespace
 from typing import List
 
 import pytest
@@ -22,7 +21,9 @@ def _write_valid_tei(path: Path, body: str = "Sample text") -> None:
     </body>
   </text>
 </TEI>
-""".format(body=body),
+""".format(
+            body=body
+        ),
         encoding="utf-8",
     )
 

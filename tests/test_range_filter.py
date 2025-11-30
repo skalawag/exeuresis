@@ -1,8 +1,15 @@
 """Tests for Stephanus range filtering."""
 
 import pytest
-from exeuresis.range_filter import RangeSpec, RangeType, StephanusRangeParser, StephanusComparator, RangeFilter
+
 from exeuresis.exceptions import InvalidStephanusRangeError
+from exeuresis.range_filter import (
+    RangeFilter,
+    RangeSpec,
+    RangeType,
+    StephanusComparator,
+    StephanusRangeParser,
+)
 
 
 def test_range_spec_single_section():
@@ -160,12 +167,48 @@ class TestRangeFilter:
     def setup_method(self):
         """Create sample dialogue data for testing."""
         self.sample_dialogue = [
-            {"speaker": "Σωκράτης", "label": "ΣΩ.", "text": "Text at 327a", "stephanus": ["327", "327a"], "said_id": 0},
-            {"speaker": "Γλαύκων", "label": "ΓΛ.", "text": "Text at 327b", "stephanus": ["327b"], "said_id": 1},
-            {"speaker": "Σωκράτης", "label": "ΣΩ.", "text": "Text at 327c", "stephanus": ["327c"], "said_id": 2},
-            {"speaker": "Γλαύκων", "label": "ΓΛ.", "text": "Text at 328a", "stephanus": ["328", "328a"], "said_id": 3},
-            {"speaker": "Σωκράτης", "label": "ΣΩ.", "text": "Text at 328b", "stephanus": ["328b"], "said_id": 4},
-            {"speaker": "Γλαύκων", "label": "ΓΛ.", "text": "Text at 329a", "stephanus": ["329", "329a"], "said_id": 5},
+            {
+                "speaker": "Σωκράτης",
+                "label": "ΣΩ.",
+                "text": "Text at 327a",
+                "stephanus": ["327", "327a"],
+                "said_id": 0,
+            },
+            {
+                "speaker": "Γλαύκων",
+                "label": "ΓΛ.",
+                "text": "Text at 327b",
+                "stephanus": ["327b"],
+                "said_id": 1,
+            },
+            {
+                "speaker": "Σωκράτης",
+                "label": "ΣΩ.",
+                "text": "Text at 327c",
+                "stephanus": ["327c"],
+                "said_id": 2,
+            },
+            {
+                "speaker": "Γλαύκων",
+                "label": "ΓΛ.",
+                "text": "Text at 328a",
+                "stephanus": ["328", "328a"],
+                "said_id": 3,
+            },
+            {
+                "speaker": "Σωκράτης",
+                "label": "ΣΩ.",
+                "text": "Text at 328b",
+                "stephanus": ["328b"],
+                "said_id": 4,
+            },
+            {
+                "speaker": "Γλαύκων",
+                "label": "ΓΛ.",
+                "text": "Text at 329a",
+                "stephanus": ["329", "329a"],
+                "said_id": 5,
+            },
         ]
 
     def test_filter_single_section(self):
@@ -235,11 +278,41 @@ class TestRangeFilter:
         """Test filtering range that spans multiple books."""
         # Simulate Republic Book 1 ending at 354c, Book 2 starting at 357a
         multi_book_dialogue = [
-            {"speaker": "Σωκράτης", "label": "ΣΩ.", "text": "Book 1 at 354a", "stephanus": ["354a"], "book": "1"},
-            {"speaker": "Γλαύκων", "label": "ΓΛ.", "text": "Book 1 at 354c", "stephanus": ["354c"], "book": "1"},
-            {"speaker": "", "label": "", "text": "ΠΟΛΙΤΕΙΑ Β", "stephanus": [], "book": "2"},  # Book header
-            {"speaker": "Σωκράτης", "label": "ΣΩ.", "text": "Book 2 at 357a", "stephanus": ["357", "357a"], "book": "2"},
-            {"speaker": "Γλαύκων", "label": "ΓΛ.", "text": "Book 2 at 357b", "stephanus": ["357b"], "book": "2"},
+            {
+                "speaker": "Σωκράτης",
+                "label": "ΣΩ.",
+                "text": "Book 1 at 354a",
+                "stephanus": ["354a"],
+                "book": "1",
+            },
+            {
+                "speaker": "Γλαύκων",
+                "label": "ΓΛ.",
+                "text": "Book 1 at 354c",
+                "stephanus": ["354c"],
+                "book": "1",
+            },
+            {
+                "speaker": "",
+                "label": "",
+                "text": "ΠΟΛΙΤΕΙΑ Β",
+                "stephanus": [],
+                "book": "2",
+            },  # Book header
+            {
+                "speaker": "Σωκράτης",
+                "label": "ΣΩ.",
+                "text": "Book 2 at 357a",
+                "stephanus": ["357", "357a"],
+                "book": "2",
+            },
+            {
+                "speaker": "Γλαύκων",
+                "label": "ΓΛ.",
+                "text": "Book 2 at 357b",
+                "stephanus": ["357b"],
+                "book": "2",
+            },
         ]
 
         filter_obj = RangeFilter()
@@ -256,9 +329,24 @@ class TestRangeFilter:
     def test_filter_preserves_segments_without_stephanus(self):
         """Test that segments without Stephanus markers inside range are preserved."""
         dialogue_with_gaps = [
-            {"speaker": "Σωκράτης", "label": "ΣΩ.", "text": "At 327a", "stephanus": ["327a"]},
-            {"speaker": "", "label": "", "text": "Title without marker", "stephanus": []},  # Should be excluded
-            {"speaker": "Γλαύκων", "label": "ΓΛ.", "text": "At 327b", "stephanus": ["327b"]},
+            {
+                "speaker": "Σωκράτης",
+                "label": "ΣΩ.",
+                "text": "At 327a",
+                "stephanus": ["327a"],
+            },
+            {
+                "speaker": "",
+                "label": "",
+                "text": "Title without marker",
+                "stephanus": [],
+            },  # Should be excluded
+            {
+                "speaker": "Γλαύκων",
+                "label": "ΓΛ.",
+                "text": "At 327b",
+                "stephanus": ["327b"],
+            },
         ]
 
         filter_obj = RangeFilter()

@@ -1,7 +1,8 @@
 """TEI XML Parser for Perseus texts."""
 
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict, List
+
 from lxml import etree
 
 from exeuresis.exceptions import InvalidTEIStructureError
@@ -13,7 +14,7 @@ class TEIParser:
     # TEI and XML namespaces
     NS = {
         "tei": "http://www.tei-c.org/ns/1.0",
-        "xml": "http://www.w3.org/XML/1998/namespace"
+        "xml": "http://www.w3.org/XML/1998/namespace",
     }
 
     def __init__(self, xml_path: Path):
@@ -46,7 +47,9 @@ class TEIParser:
         """
         speakers = []
         # Find all persName elements in particDesc
-        person_names = self.root.findall(".//tei:particDesc/tei:person/tei:persName", self.NS)
+        person_names = self.root.findall(
+            ".//tei:particDesc/tei:person/tei:persName", self.NS
+        )
 
         for person in person_names:
             if person.text:
