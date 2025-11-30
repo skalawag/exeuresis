@@ -14,6 +14,14 @@ from exeuresis.anthology_extractor import (
 )
 from exeuresis.anthology_formatter import AnthologyFormatter
 from exeuresis.catalog import PerseusCatalog
+from exeuresis.cli_catalog import (
+    filter_authors,
+    filter_works,
+    format_authors_table,
+    format_works_table,
+    paginate,
+    parse_filter,
+)
 from exeuresis.config import CorpusConfig, get_corpora, get_default_corpus_name
 from exeuresis.corpus_health import (
     CorpusHealthResult,
@@ -183,20 +191,79 @@ def _print_corpus_health(
 def handle_list_authors(args):
     """Handle the list-authors command."""
     catalog = PerseusCatalog(corpus_name=args.corpus)
-    authors = catalog.list_authors()
+    all_authors = catalog.list_authors()
 
-    if not authors:
+    if not all_authors:
         print("No authors found in catalog.", file=sys.stderr)
         return
 
-    print(f"Found {len(authors)} authors:\n")
-    for author in authors:
-        print(author)
+    # Parse columns
+    columns = None
+    if hasattr(args, "columns") and args.columns:
+        columns = [c.strip() for c in args.columns.split(",")]
+
+    # Parse and apply filters
+    filtered_authors = all_authors
+    if hasattr(args, "filters") and args.filters:
+        try:
+            parsed_filters = [parse_filter(f) for f in args.filters]
+            filtered_authors = filter_authors(all_authors, parsed_filters)
+        except ValueError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            sys.exit(1)
+
+    # Apply pagination
+    limit = getattr(args, "limit", None)
+    offset = getattr(args, "offset", 0)
+    paginated = paginate(filtered_authors, limit=limit, offset=offset)
+
+    # Show results
+    if not paginated:
+        if offset > 0:
+            print(
+                f"No results (offset {offset} beyond {len(filtered_authors)} authors)",
+                file=sys.stderr,
+            )
+        else:
+            print("No authors match the filters.", file=sys.stderr)
+        return
+
+    # Show count/pagination info
+    if hasattr(args, "filters") and args.filters:
+        if limit:
+            print(
+                f"Showing {offset + 1}-{offset + len(paginated)} of {len(filtered_authors)} authors "
+                f"(filtered from {len(all_authors)})\n"
+            )
+        else:
+            print(
+                f"Found {len(filtered_authors)} of {len(all_authors)} authors (filtered)\n"
+            )
+    else:
+        if limit:
+            print(
+                f"Showing {offset + 1}-{offset + len(paginated)} of {len(all_authors)} authors\n"
+            )
+        else:
+            print(f"Found {len(all_authors)} authors:\n")
+
+    # Format and print
+    try:
+        output = format_authors_table(paginated, columns=columns)
+        print(output)
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 def handle_list_works(args):
     """Handle the list-works command."""
     catalog = PerseusCatalog(corpus_name=args.corpus)
+
+    # Parse columns
+    columns = None
+    if hasattr(args, "columns") and args.columns:
+        columns = [c.strip() for c in args.columns.split(",")]
 
     # Handle --all flag
     if args.all:
@@ -207,17 +274,69 @@ def handle_list_works(args):
             print("No authors found in catalog.", file=sys.stderr)
             return
 
-        total_works = 0
+        # Collect all works from all authors
+        all_works = []
         for author in authors:
             works = catalog.list_works(author.tlg_id)
-            if works:
-                print(f"\n{author}")
-                print(f"Found {len(works)} works:\n")
-                _print_works_table(works)
-                total_works += len(works)
+            all_works.extend(works)
 
-        print(f"\n{'='*70}")
-        print(f"Total: {len(authors)} authors, {total_works} works")
+        # Parse and apply filters
+        filtered_works = all_works
+        if hasattr(args, "filters") and args.filters:
+            try:
+                parsed_filters = [parse_filter(f) for f in args.filters]
+                filtered_works = filter_works(all_works, parsed_filters)
+            except ValueError as e:
+                print(f"Error: {e}", file=sys.stderr)
+                sys.exit(1)
+
+        # Apply pagination
+        limit = getattr(args, "limit", None)
+        offset = getattr(args, "offset", 0)
+        paginated = paginate(filtered_works, limit=limit, offset=offset)
+
+        # Show results
+        if not paginated:
+            if offset > 0:
+                print(
+                    f"No results (offset {offset} beyond {len(filtered_works)} works)",
+                    file=sys.stderr,
+                )
+            else:
+                print("No works match the filters.", file=sys.stderr)
+            return
+
+        # Show count/pagination info
+        if hasattr(args, "filters") and args.filters:
+            if limit:
+                print(
+                    f"Showing {offset + 1}-{offset + len(paginated)} of {len(filtered_works)} works "
+                    f"(filtered from {len(all_works)})\n"
+                )
+            else:
+                print(
+                    f"Found {len(filtered_works)} of {len(all_works)} works (filtered)\n"
+                )
+        else:
+            if limit:
+                print(
+                    f"Showing {offset + 1}-{offset + len(paginated)} of {len(all_works)} works\n"
+                )
+            else:
+                print(f"Found {len(all_works)} works:\n")
+
+        # Format and print
+        try:
+            output = format_works_table(paginated, columns=columns)
+            if output is None:
+                # Use legacy formatting
+                _print_works_table(paginated)
+            else:
+                print(output)
+        except ValueError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            sys.exit(1)
+
         return
 
     # Single author mode
@@ -240,16 +359,69 @@ def handle_list_works(args):
         print(f"Author not found: {author_id}", file=sys.stderr)
         sys.exit(1)
 
-    print(f"{author}\n")
-
-    # Get works
-    works = catalog.list_works(author_id)
-    if not works:
+    # Get all works for this author
+    all_works = catalog.list_works(author_id)
+    if not all_works:
         print(f"No works found for {author_id}", file=sys.stderr)
         return
 
-    print(f"Found {len(works)} works:\n")
-    _print_works_table(works)
+    # Parse and apply filters
+    filtered_works = all_works
+    if hasattr(args, "filters") and args.filters:
+        try:
+            parsed_filters = [parse_filter(f) for f in args.filters]
+            filtered_works = filter_works(all_works, parsed_filters)
+        except ValueError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            sys.exit(1)
+
+    # Apply pagination
+    limit = getattr(args, "limit", None)
+    offset = getattr(args, "offset", 0)
+    paginated = paginate(filtered_works, limit=limit, offset=offset)
+
+    # Show results
+    if not paginated:
+        if offset > 0:
+            print(
+                f"No results (offset {offset} beyond {len(filtered_works)} works)",
+                file=sys.stderr,
+            )
+        else:
+            print("No works match the filters.", file=sys.stderr)
+        return
+
+    # Print author header
+    print(f"{author}\n")
+
+    # Show count/pagination info
+    if hasattr(args, "filters") and args.filters:
+        if limit:
+            print(
+                f"Showing {offset + 1}-{offset + len(paginated)} of {len(filtered_works)} works "
+                f"(filtered from {len(all_works)})\n"
+            )
+        else:
+            print(f"Found {len(filtered_works)} of {len(all_works)} works (filtered)\n")
+    else:
+        if limit:
+            print(
+                f"Showing {offset + 1}-{offset + len(paginated)} of {len(all_works)} works\n"
+            )
+        else:
+            print(f"Found {len(all_works)} works:\n")
+
+    # Format and print
+    try:
+        output = format_works_table(paginated, columns=columns)
+        if output is None:
+            # Use legacy formatting
+            _print_works_table(paginated)
+        else:
+            print(output)
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 def handle_search(args):
@@ -965,6 +1137,27 @@ Examples:
     list_authors_parser = subparsers.add_parser(
         "list-authors", help="List all authors in the catalog"
     )
+    list_authors_parser.add_argument(
+        "--columns",
+        type=str,
+        help="Comma-separated list of columns (e.g., tlg_id,name_en). Use 'all' for all fields.",
+    )
+    list_authors_parser.add_argument(
+        "--filter",
+        action="append",
+        dest="filters",
+        metavar="FIELD=VALUE",
+        help="Filter by field. Use '=' for exact or '~' for contains. Repeatable.",
+    )
+    list_authors_parser.add_argument(
+        "--limit", type=int, help="Maximum number of results to show"
+    )
+    list_authors_parser.add_argument(
+        "--offset",
+        type=int,
+        default=0,
+        help="Number of results to skip (for pagination)",
+    )
     list_authors_parser.set_defaults(func=handle_list_authors)
 
     # List works subcommand
@@ -979,6 +1172,27 @@ Examples:
     )
     list_works_parser.add_argument(
         "--all", action="store_true", help="List all works from all authors"
+    )
+    list_works_parser.add_argument(
+        "--columns",
+        type=str,
+        help="Comma-separated list of columns (e.g., work_id,title_en). Use 'all' for all fields.",
+    )
+    list_works_parser.add_argument(
+        "--filter",
+        action="append",
+        dest="filters",
+        metavar="FIELD=VALUE",
+        help="Filter by field. Use '=' for exact or '~' for contains. Repeatable.",
+    )
+    list_works_parser.add_argument(
+        "--limit", type=int, help="Maximum number of results to show"
+    )
+    list_works_parser.add_argument(
+        "--offset",
+        type=int,
+        default=0,
+        help="Number of results to skip (for pagination)",
     )
     list_works_parser.set_defaults(func=handle_list_works)
 

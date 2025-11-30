@@ -1,6 +1,5 @@
 """Tests for work name resolution and aliases."""
 
-
 import pytest
 
 from exeuresis.exceptions import WorkNotFoundError

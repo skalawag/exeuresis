@@ -56,6 +56,14 @@ Anthology:
 .venv/bin/python -m exeuresis.cli extract euthyphro --passages 5a,7b tlg0059.tlg030 --passages 327a-328b -s A
 ```
 
+Catalog exploration:
+```bash
+.venv/bin/python -m exeuresis.cli list-authors --filter name_en~Plat --limit 5
+.venv/bin/python -m exeuresis.cli list-authors --columns tlg_id,name_en --limit 10
+.venv/bin/python -m exeuresis.cli list-works --all --filter tlg_id=tlg0059 --columns work_id,title_en
+.venv/bin/python -m exeuresis.cli list-works tlg0059 --filter title_en~Alc --limit 3
+```
+
 Testing / lint:
 ```bash
 .venv/bin/python -m pytest tests/ -v

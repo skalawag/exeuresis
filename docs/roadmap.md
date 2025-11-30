@@ -20,16 +20,18 @@ This document outlines likely and useful future directions for `exeuresis`. Item
   - Works with both single extraction and anthology modes
   - Segment schema: `{speaker, label, text, stephanus[], said_id, is_paragraph_start, book}`
 
+- ✅ **Richer catalog exploration** (Milestone 1)
+  - Added `--columns` flag to select which fields to display
+  - Added `--filter` flag for exact (`=`) or contains (`~`) matching (repeatable for AND logic)
+  - Added `--limit` and `--offset` for pagination
+  - All flags work with both `list-authors` and `list-works` commands
+  - Backward compatible: default behavior unchanged
+
 ---
 
 ### Milestone 1 – Diagnostics & Data Formats (Near‑Term, High ROI)
 
-- **Richer catalog exploration**
-  - Extend `list-authors` and `list-works` with:
-    - `--columns` to select which fields to show.
-    - `--filter field=value` for simple exact / contains filtering.
-    - `--limit` and `--offset` for pagination over large result sets.
-  - Keep default behavior backwards compatible for existing scripts.
+All items completed!
 
 ---
 
