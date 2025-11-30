@@ -464,3 +464,55 @@ class TestCLIIntegration:
 
         assert result.returncode != 0
         assert "Invalid column" in result.stderr or "invalid" in result.stderr.lower()
+
+
+class TestHelpTextAccuracy:
+    """Test that help text shows correct column names."""
+
+    @pytest.fixture
+    def cli_command(self):
+        return [sys.executable, "-m", "exeuresis.cli"]
+
+    def test_list_authors_help_shows_all_columns(self, cli_command):
+        """Verify list-authors --help shows all available column names."""
+        from exeuresis.cli_catalog import AUTHOR_COLUMNS
+
+        result = subprocess.run(
+            cli_command + ["list-authors", "--help"],
+            capture_output=True,
+            text=True,
+        )
+
+        assert result.returncode == 0
+        help_text = result.stdout
+
+        # Check that all column names appear in help text
+        for column in AUTHOR_COLUMNS:
+            assert (
+                column in help_text
+            ), f"Column '{column}' not found in list-authors help text"
+
+        # Verify the help text mentions "Available:"
+        assert "Available:" in help_text
+
+    def test_list_works_help_shows_all_columns(self, cli_command):
+        """Verify list-works --help shows all available column names."""
+        from exeuresis.cli_catalog import WORK_COLUMNS
+
+        result = subprocess.run(
+            cli_command + ["list-works", "--help"],
+            capture_output=True,
+            text=True,
+        )
+
+        assert result.returncode == 0
+        help_text = result.stdout
+
+        # Check that all column names appear in help text
+        for column in WORK_COLUMNS:
+            assert (
+                column in help_text
+            ), f"Column '{column}' not found in list-works help text"
+
+        # Verify the help text mentions "Available:"
+        assert "Available:" in help_text

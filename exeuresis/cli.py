@@ -15,6 +15,8 @@ from exeuresis.anthology_extractor import (
 from exeuresis.anthology_formatter import AnthologyFormatter
 from exeuresis.catalog import PerseusCatalog
 from exeuresis.cli_catalog import (
+    AUTHOR_COLUMNS,
+    WORK_COLUMNS,
     filter_authors,
     filter_works,
     format_authors_table,
@@ -1140,7 +1142,8 @@ Examples:
     list_authors_parser.add_argument(
         "--columns",
         type=str,
-        help="Comma-separated list of columns (e.g., tlg_id,name_en). Use 'all' for all fields.",
+        help=f"Comma-separated list of columns (e.g., tlg_id,name_en). "
+        f"Available: {', '.join(sorted(AUTHOR_COLUMNS))}. Use 'all' for all fields.",
     )
     list_authors_parser.add_argument(
         "--filter",
@@ -1176,7 +1179,8 @@ Examples:
     list_works_parser.add_argument(
         "--columns",
         type=str,
-        help="Comma-separated list of columns (e.g., work_id,title_en). Use 'all' for all fields.",
+        help=f"Comma-separated list of columns (e.g., work_id,title_en). "
+        f"Available: {', '.join(sorted(WORK_COLUMNS))}. Use 'all' for all fields.",
     )
     list_works_parser.add_argument(
         "--filter",

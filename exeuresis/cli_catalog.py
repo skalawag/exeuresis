@@ -4,6 +4,10 @@ from typing import List, Optional, Tuple
 
 from exeuresis.catalog import PerseusAuthor, PerseusWork
 
+# Available columns for filtering and display
+AUTHOR_COLUMNS = {"tlg_id", "name_en", "name_grc"}
+WORK_COLUMNS = {"tlg_id", "work_id", "title_en", "title_grc", "page_range"}
+
 
 def parse_filter(filter_str: str) -> Tuple[str, str, str]:
     """
@@ -48,11 +52,10 @@ def filter_authors(
         ValueError: If field name is invalid
     """
     # Validate field names
-    valid_fields = {"tlg_id", "name_en", "name_grc"}
     for field, op, value in filters:
-        if field not in valid_fields:
+        if field not in AUTHOR_COLUMNS:
             raise ValueError(
-                f"Invalid field: '{field}'. Valid fields: {', '.join(sorted(valid_fields))}"
+                f"Invalid field: '{field}'. Valid fields: {', '.join(sorted(AUTHOR_COLUMNS))}"
             )
 
     # Apply filters (AND logic)
@@ -86,11 +89,10 @@ def filter_works(
         ValueError: If field name is invalid
     """
     # Validate field names
-    valid_fields = {"tlg_id", "work_id", "title_en", "title_grc", "page_range"}
     for field, op, value in filters:
-        if field not in valid_fields:
+        if field not in WORK_COLUMNS:
             raise ValueError(
-                f"Invalid field: '{field}'. Valid fields: {', '.join(sorted(valid_fields))}"
+                f"Invalid field: '{field}'. Valid fields: {', '.join(sorted(WORK_COLUMNS))}"
             )
 
     # Apply filters (AND logic)
@@ -156,14 +158,13 @@ def format_authors_table(
 
     # Handle 'all' special value
     if columns == ["all"]:
-        columns = ["tlg_id", "name_en", "name_grc"]
+        columns = sorted(AUTHOR_COLUMNS)
 
     # Validate columns
-    valid_columns = {"tlg_id", "name_en", "name_grc"}
     for col in columns:
-        if col not in valid_columns:
+        if col not in AUTHOR_COLUMNS:
             raise ValueError(
-                f"Invalid column: '{col}'. Valid columns: {', '.join(sorted(valid_columns))}"
+                f"Invalid column: '{col}'. Valid columns: {', '.join(sorted(AUTHOR_COLUMNS))}"
             )
 
     # Build table header
@@ -225,14 +226,13 @@ def format_works_table(
 
     # Handle 'all' special value
     if columns == ["all"]:
-        columns = ["tlg_id", "work_id", "title_en", "title_grc", "page_range"]
+        columns = sorted(WORK_COLUMNS)
 
     # Validate columns
-    valid_columns = {"tlg_id", "work_id", "title_en", "title_grc", "page_range"}
     for col in columns:
-        if col not in valid_columns:
+        if col not in WORK_COLUMNS:
             raise ValueError(
-                f"Invalid column: '{col}'. Valid columns: {', '.join(sorted(valid_columns))}"
+                f"Invalid column: '{col}'. Valid columns: {', '.join(sorted(WORK_COLUMNS))}"
             )
 
     # Build table header
