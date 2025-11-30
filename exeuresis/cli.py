@@ -10,6 +10,7 @@ from exeuresis.parser import TEIParser
 from exeuresis.extractor import TextExtractor
 from exeuresis.formatter import TextFormatter, OutputStyle
 from exeuresis.catalog import PerseusCatalog
+from exeuresis.config import CorpusConfig, get_corpora, get_default_corpus_name
 from exeuresis.range_filter import RangeFilter
 from exeuresis.work_resolver import WorkResolver
 from exeuresis.anthology_extractor import (
@@ -18,6 +19,11 @@ from exeuresis.anthology_extractor import (
     parse_range_list,
 )
 from exeuresis.anthology_formatter import AnthologyFormatter
+from exeuresis.corpus_health import (
+    CorpusHealthResult,
+    CorpusHealthStatus,
+    check_corpus,
+)
 from exeuresis.exceptions import (
     WorkNotFoundError,
     InvalidTEIStructureError,
@@ -27,6 +33,12 @@ from exeuresis.exceptions import (
 )
 
 logger = logging.getLogger(__name__)
+
+STATUS_ICONS = {
+    CorpusHealthStatus.OK: "✓",
+    CorpusHealthStatus.WARNING: "⚠",
+    CorpusHealthStatus.ERROR: "✗",
+}
 
 
 def parse_wrap_arg(value):
@@ -109,6 +121,59 @@ def _print_works_table(works):
         sections = work.page_range if work.page_range else ""
         file_id = f"{work.tlg_id}.{work.work_id}"
         print(f"{title:<{title_width}}  {sections:<{sections_width}}  {file_id:<{work_id_width}}")
+
+
+def _print_corpus_health(
+    display_name: str,
+    corpus_config,
+    result: CorpusHealthResult,
+    *,
+    detailed: bool,
+):
+    """Render corpus health information."""
+
+    icon = STATUS_ICONS.get(result.status, "•")
+
+    if not detailed:
+        print(f"* {display_name} {icon} [{result.status.value}] {result.message}")
+        return
+
+    print(f"* {display_name}")
+    print(f"    Path: {result.path}")
+    if getattr(corpus_config, "description", None):
+        print(f"    Description: {corpus_config.description}")
+    print(f"    Status: {result.status.value} — {result.message}")
+    print(f"    Authors: {result.total_authors}")
+    print(f"    Works: {result.total_works}")
+    print(f"    Files: {result.total_files}")
+
+    sample_info = f"{result.checked_files}"
+    if result.mode == "quick":
+        extras = []
+        if result.sample_percent is not None:
+            extras.append(f"{result.sample_percent:g}%")
+        if result.seed is not None:
+            extras.append(f"seed={result.seed}")
+        suffix = f"quick sample"
+        if extras:
+            suffix += f" ({', '.join(extras)})"
+        print(f"    Checked: {sample_info} — {suffix}")
+    else:
+        print(f"    Checked: {sample_info} — full walk")
+
+    if result.metadata_issues:
+        print("    Metadata issues:")
+        for issue in result.metadata_issues[:5]:
+            print(f"      - {issue}")
+        if len(result.metadata_issues) > 5:
+            print(f"      … {len(result.metadata_issues) - 5} more")
+
+    if result.failed_files:
+        print("    Parse failures:")
+        for failure in result.failed_files[:5]:
+            print(f"      - {failure.work_id}: {failure.error}")
+        if len(result.failed_files) > 5:
+            print(f"      … {len(result.failed_files) - 5} more")
 
 
 def handle_list_authors(args):
@@ -207,39 +272,121 @@ def handle_search(args):
 
 def handle_list_corpora(args):
     """Handle the list-corpora command."""
-    from exeuresis.config import get_corpora, get_default_corpus_name
-
     corpora = get_corpora()
     default_name = get_default_corpus_name()
+    extra_paths = [Path(p) for p in getattr(args, "extra_corpora", []) or []]
 
-    if not corpora:
+    if not corpora and not extra_paths:
         print("No corpora configured.", file=sys.stderr)
         return
 
     print("Configured corpora:\n")
 
+    entries = []
+    has_existing_path = False
+
     for name, corpus_config in sorted(corpora.items()):
-        # Format corpus name with default indicator
-        display_name = f"{name} (default)" if name == default_name else name
-        print(f"  {display_name}")
-        print(f"    Path: {corpus_config.path}")
-
-        if corpus_config.description:
-            print(f"    Description: {corpus_config.description}")
-
-        # Check if corpus exists and count authors/works
+        entries.append((name, corpus_config, False))
         if corpus_config.path.exists():
-            try:
-                catalog = PerseusCatalog(data_dir=corpus_config.path)
-                authors = catalog.list_authors()
-                total_works = sum(len(catalog.list_works(a.tlg_id)) for a in authors)
-                print(f"    Status: ✓ Found ({len(authors)} authors, {total_works} works)")
-            except Exception as e:
-                print(f"    Status: ⚠ Found but error reading: {e}")
-        else:
-            print(f"    Status: ✗ Not found")
+            has_existing_path = True
 
-        print()  # Blank line between corpora
+    for idx, path in enumerate(extra_paths, start=1):
+        name = str(path)
+        entries.append(
+            (
+                name,
+                CorpusConfig(
+                    name=name,
+                    path=path,
+                    description="Provided via --corpus",
+                ),
+                True,
+            )
+        )
+        if path.exists():
+            has_existing_path = True
+
+    if has_existing_path:
+        filtered_entries = []
+        for name, corpus_config, is_manual in entries:
+            if corpus_config.path.exists() or is_manual:
+                filtered_entries.append((name, corpus_config))
+        entries_to_display = filtered_entries or [(name, config) for name, config, _ in entries]
+    else:
+        entries_to_display = [(name, config) for name, config, _ in entries]
+
+    for name, corpus_config in entries_to_display:
+        display_name = f"{name} (default)" if name == default_name else name
+        result = check_corpus(corpus_config, mode="quick")
+        _print_corpus_health(display_name, corpus_config, result, detailed=getattr(args, "details", False))
+        print()
+
+
+def handle_check_corpus(args):
+    """Handle the check-corpus command."""
+    corpora = get_corpora()
+    default_name = get_default_corpus_name()
+
+    manual_arg = getattr(args, "target_corpus", None) or getattr(args, "corpus", None)
+    manual_config = None
+    corpus_config = None
+
+    if manual_arg:
+        if manual_arg in corpora:
+            corpus_config = corpora[manual_arg]
+        else:
+            path_candidate = Path(manual_arg).expanduser()
+            if "/" in manual_arg or manual_arg.startswith(".") or path_candidate.exists():
+                manual_config = CorpusConfig(
+                    name=str(path_candidate),
+                    path=path_candidate,
+                    description="Provided via --corpus",
+                )
+                corpus_config = manual_config
+            elif not corpora:
+                print(f"Corpus '{manual_arg}' not found.", file=sys.stderr)
+                print("No corpora configured. Provide a path via --corpus.", file=sys.stderr)
+                sys.exit(1)
+            else:
+                print(f"Corpus '{manual_arg}' not found.", file=sys.stderr)
+                available = ", ".join(sorted(corpora.keys()))
+                print(f"Available corpora: {available}", file=sys.stderr)
+                sys.exit(1)
+
+    if corpus_config is None:
+        if default_name in corpora:
+            corpus_config = corpora[default_name]
+        elif corpora:
+            first_name = sorted(corpora.keys())[0]
+            corpus_config = corpora[first_name]
+        else:
+            print("No corpora configured and no --corpus path provided.", file=sys.stderr)
+            sys.exit(1)
+
+    if args.mode == "full" and args.sample_percent is not None:
+        print("--sample-percent is only valid in quick mode", file=sys.stderr)
+        sys.exit(1)
+
+    if args.sample_percent is not None and args.sample_percent <= 0:
+        print("--sample-percent must be positive", file=sys.stderr)
+        sys.exit(1)
+
+    result = check_corpus(
+        corpus_config,
+        mode=args.mode,
+        sample_percent=args.sample_percent if args.mode == "quick" else None,
+        seed=args.seed,
+    )
+
+    display_name = corpus_config.name
+    if default_name and corpus_config.name == default_name:
+        display_name = f"{display_name} (default)"
+
+    _print_corpus_health(display_name, corpus_config, result, detailed=True)
+    print()
+
+    if result.status is CorpusHealthStatus.ERROR:
+        sys.exit(1)
 
 
 def parse_anthology_args(input_files, passage_specs):
@@ -723,13 +870,62 @@ Examples:
     list_corpora_parser = subparsers.add_parser(
         "list-corpora", help="List all configured corpora"
     )
+    list_corpora_parser.add_argument(
+        "--details",
+        "--verbose",
+        dest="details",
+        action="store_true",
+        help="Show detailed information for each corpus",
+    )
+    list_corpora_parser.add_argument(
+        "--corpus",
+        dest="extra_corpora",
+        action="append",
+        type=Path,
+        help="Additional corpus directory to inspect (repeatable)",
+    )
     list_corpora_parser.set_defaults(func=handle_list_corpora)
+
+    # Check corpus subcommand
+    check_corpus_parser = subparsers.add_parser(
+        "check-corpus", help="Run health checks for a corpus"
+    )
+    check_corpus_parser.add_argument(
+        "--corpus",
+        dest="target_corpus",
+        help="Corpus name to check (defaults to configured default)",
+    )
+    check_corpus_parser.add_argument(
+        "--mode",
+        choices=["quick", "full"],
+        default="quick",
+        help="Quick sampling or full corpus walk",
+    )
+    check_corpus_parser.add_argument(
+        "--sample-percent",
+        dest="sample_percent",
+        type=float,
+        help="Percentage of files to sample in quick mode",
+    )
+    check_corpus_parser.add_argument(
+        "--seed",
+        type=int,
+        help="Random seed for sampling",
+    )
+    check_corpus_parser.set_defaults(func=handle_check_corpus)
 
     # Check for backward compatibility (old-style invocation without subcommand)
     # If first arg looks like a file path (contains / or ends with .xml), insert 'extract'
     if len(sys.argv) > 1:
         first_arg = sys.argv[1]
-        valid_commands = {"extract", "list-authors", "list-works", "search", "list-corpora"}
+        valid_commands = {
+            "extract",
+            "list-authors",
+            "list-works",
+            "search",
+            "list-corpora",
+            "check-corpus",
+        }
         if first_arg not in valid_commands and (
             "/" in first_arg or first_arg.endswith(".xml")
         ):
