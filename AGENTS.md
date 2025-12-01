@@ -77,3 +77,9 @@ Testing / lint:
 - Mention output style limits + alias behavior succinctly when relevant.
 - When editing code, follow existing style; minimal comments.
 - For doc replies, keep sentences short; token thrift beats polish.
+
+## Feature Development 
+
+- Use TDD workflow.
+- Features are developed on git worktrees in .worktrees.
+- Ask to merge worktrees to main, ask for permission to commit.
