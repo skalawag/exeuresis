@@ -5,6 +5,7 @@ docs/plans/
 .factory/
 .worktrees
 aliases.yaml
+docs/TODO.md
 
 # Claude Code local settings
 .claude/settings.local.json

@@ -1,6 +1,6 @@
 # AGENT GUIDE
 
-Goal: extract + format Perseus Greek TEI XML via `exeuresis.cli`. Keep answers short, never touch `canonical-greekLit` content.
+Goal: extract + format TEI XML via `exeuresis.cli`. Keep answers short, never touch `canonical-greekLit` (or other corpora) content.
 
 ## TL;DR commands
 
@@ -33,9 +33,9 @@ Segment schema (approx): `{speaker,label,text,stephanus[],said_id,is_paragraph_s
 
 ## Constraints / warnings
 
-- **Do not** traverse entire `canonical-greekLit/data` (huge). Access only specific paths.
+- **Do not** traverse entire `canonical-greekLit/data` (huge) unless instructed to do so. Access only specific paths.
 - Never write to corpus dir; outputs go `./output/` unless `--print` or custom `-o`.
-- Respect style validation (S only Plato). Use `InvalidStyleError` messaging.
+- Respect style validation (S only in authors that have Stephanus pagination). Use `InvalidStyleError` messaging.
 - Book + section markers come from `<div subtype="book|section">` + `<milestone unit="section|stephpage">`.
 
 ## Typical workflow snippets
