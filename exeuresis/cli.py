@@ -177,17 +177,13 @@ def _print_corpus_health(
 
     if result.metadata_issues:
         print("    Metadata issues:")
-        for issue in result.metadata_issues[:5]:
+        for issue in result.metadata_issues:
             print(f"      - {issue}")
-        if len(result.metadata_issues) > 5:
-            print(f"      … {len(result.metadata_issues) - 5} more")
 
     if result.failed_files:
         print("    Parse failures:")
-        for failure in result.failed_files[:5]:
+        for failure in result.failed_files:
             print(f"      - {failure.work_id}: {failure.error}")
-        if len(result.failed_files) > 5:
-            print(f"      … {len(result.failed_files) - 5} more")
 
 
 def handle_list_authors(args):

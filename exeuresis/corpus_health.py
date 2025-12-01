@@ -148,12 +148,12 @@ def check_corpus(
             file_path = getattr(work, "file_path", None)
             work_id = getattr(work, "work_id", getattr(work, "tlg_id", "unknown"))
             if not file_path:
-                metadata_issues.append(f"{work_id}: missing TEI file path")
+                metadata_issues.append(f"{author.tlg_id}/{work_id}: missing TEI file path")
                 continue
 
             file_path = Path(file_path)
             if not file_path.exists():
-                metadata_issues.append(f"{work_id}: TEI file not found ({file_path})")
+                metadata_issues.append(f"{author.tlg_id}/{work_id}: TEI file not found ({file_path})")
                 continue
 
             file_entries.append(
